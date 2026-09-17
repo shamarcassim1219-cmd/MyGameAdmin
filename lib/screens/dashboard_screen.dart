@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../main.dart';
 import 'users_list_screen.dart';
+import 'deposit_methods_screen.dart';
 import '../services/api_service.dart';
 import 'login_screen.dart';
 
@@ -64,7 +65,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             _navItem(context, Icons.storefront_outlined, 'Listings', () => _comingSoon(context)),
             _navItem(context, Icons.receipt_long_outlined, 'Orders', () => _comingSoon(context)),
             _navItem(context, Icons.calendar_month_outlined, 'Rentals & Installments', () => _comingSoon(context)),
-            _navItem(context, Icons.account_balance_wallet_outlined, 'Wallet', () => _comingSoon(context)),
+            _navItem(context, Icons.account_balance_wallet_outlined, 'Wallet', () => Navigator.push(context, MaterialPageRoute(builder: (_) => const DepositMethodsScreen()))),
             _navItem(context, Icons.support_agent_outlined, 'Support', () => _comingSoon(context)),
             _navItem(context, Icons.bar_chart_outlined, 'Reports', () => _comingSoon(context)),
             _navItem(context, Icons.notifications_outlined, 'Notifications', () => _comingSoon(context)),

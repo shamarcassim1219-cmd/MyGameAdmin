@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
@@ -106,6 +107,66 @@ class ApiService {
       headers: await _headers(),
       body: jsonEncode({'amount': amount, 'reason': reason}),
     );
+    await _handle(res);
+  }
+
+  // ---------- UPLOAD ----------
+  static Future<String> uploadImage(XFile file) async {
+    final token = await getToken();
+    final uri = Uri.parse('$baseUrl/upload');
+    final request = http.MultipartRequest('POST', uri);
+    if (token != null) request.headers['Authorization'] = 'Bearer $token';
+    final bytes = await file.readAsBytes();
+    request.files.add(http.MultipartFile.fromBytes('file', bytes, filename: file.name));
+
+    final streamedRes = await request.send();
+    final resBody = await streamedRes.stream.bytesToString();
+
+    if (streamedRes.statusCode != 200) {
+      try {
+        final err = jsonDecode(resBody);
+        throw Exception(err['error'] ?? 'Upload failed (${streamedRes.statusCode})');
+      } catch (e) {
+        if (e is Exception) rethrow;
+        throw Exception('Upload failed (${streamedRes.statusCode})');
+      }
+    }
+    final data = jsonDecode(resBody);
+    return data['url'];
+  }
+
+  // ---------- DEPOSIT METHODS ----------
+  static Future<List<dynamic>> getDepositMethods() async {
+    final res = await http.get(Uri.parse('$baseUrl/admin/deposit-methods'), headers: await _headers());
+    final data = await _handle(res);
+    return data['methods'];
+  }
+
+  static Future<void> addDepositMethod(Map<String, dynamic> body) async {
+    final res = await http.post(
+      Uri.parse('$baseUrl/admin/deposit-methods'),
+      headers: await _headers(),
+      body: jsonEncode(body),
+    );
+    await _handle(res);
+  }
+
+  static Future<void> updateDepositMethod(int id, Map<String, dynamic> body) async {
+    final res = await http.put(
+      Uri.parse('$baseUrl/admin/deposit-methods/$id'),
+      headers: await _headers(),
+      body: jsonEncode(body),
+    );
+    await _handle(res);
+  }
+
+  static Future<void> toggleDepositMethod(int id) async {
+    final res = await http.post(Uri.parse('$baseUrl/admin/deposit-methods/$id/toggle'), headers: await _headers());
+    await _handle(res);
+  }
+
+  static Future<void> deleteDepositMethod(int id) async {
+    final res = await http.delete(Uri.parse('$baseUrl/admin/deposit-methods/$id'), headers: await _headers());
     await _handle(res);
   }
 }
