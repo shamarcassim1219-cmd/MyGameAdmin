@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import '../main.dart';
 import '../services/api_service.dart';
 import 'dashboard_screen.dart';
@@ -49,6 +50,7 @@ class _LoginScreenState extends State<LoginScreen> {
     });
     try {
       await ApiService.adminVerifyLogin(_emailCtrl.text.trim(), _otpCtrl.text.trim());
+      try { final t = await FirebaseMessaging.instance.getToken(); if (t != null) await ApiService.saveFcmToken(t); } catch (_) {}
       if (!mounted) return;
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (_) => const DashboardScreen()),

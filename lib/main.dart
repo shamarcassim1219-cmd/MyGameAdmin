@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'firebase_options.dart';
 import 'services/api_service.dart';
 import 'screens/login_screen.dart';
 import 'screens/dashboard_screen.dart';
@@ -15,7 +18,13 @@ class AppColors {
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
-void main() {
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {}
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
   runApp(const MyGameAdminApp());
 }
 
@@ -88,10 +97,28 @@ class _AuthGateState extends State<_AuthGate> {
     _check();
   }
 
+  Future<void> _setupFcm() async {
+    try {
+      final messaging = FirebaseMessaging.instance;
+      await messaging.requestPermission(alert: true, badge: true, sound: true);
+
+      final token = await messaging.getToken();
+      if (token != null) {
+        await ApiService.saveFcmToken(token);
+      }
+
+      messaging.onTokenRefresh.listen((newToken) async {
+        await ApiService.saveFcmToken(newToken);
+      });
+    } catch (_) {}
+  }
+
   Future<void> _check() async {
     final token = await ApiService.getToken();
+    final loggedIn = token != null;
+    if (loggedIn) await _setupFcm();
     setState(() {
-      _loggedIn = token != null;
+      _loggedIn = loggedIn;
       _loading = false;
     });
   }

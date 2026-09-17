@@ -64,6 +64,16 @@ class ApiService {
     await clearToken();
   }
 
+  // ---------- FCM ----------
+  static Future<void> saveFcmToken(String fcmToken) async {
+    final res = await http.post(
+      Uri.parse('$baseUrl/notifications/fcm-token'),
+      headers: await _headers(),
+      body: jsonEncode({'token': fcmToken}),
+    );
+    await _handle(res);
+  }
+
   // ---------- USERS ----------
   static Future<List<dynamic>> getUsers() async {
     final res = await http.get(Uri.parse('$baseUrl/admin/users'), headers: await _headers());
