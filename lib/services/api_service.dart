@@ -408,4 +408,20 @@ class ApiService {
     final data = await _handle(res);
     return data['message'] ?? 'Password changed';
   }
+
+  // ---------- SUB-ADMIN APPROVAL ----------
+  static Future<List<dynamic>> getSubAdminRequests() async {
+    final res = await http.get(Uri.parse('$baseUrl/admin/sub-admins/requests'), headers: await _headers());
+    final data = await _handle(res);
+    return data['requests'] ?? data['subAdmins'] ?? [];
+  }
+
+  static Future<void> decideSubAdmin(int userId, bool approve) async {
+    final res = await http.post(
+      Uri.parse('$baseUrl/admin/sub-admins/$userId/decide'),
+      headers: await _headers(),
+      body: jsonEncode({'approve': approve}),
+    );
+    await _handle(res);
+  }
 }
