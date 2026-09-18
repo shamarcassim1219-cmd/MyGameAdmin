@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../main.dart';
 import 'users_list_screen.dart';
 import 'deposit_methods_screen.dart';
+import 'verification_list_screen.dart';
 import '../services/api_service.dart';
 import 'login_screen.dart';
 
@@ -61,7 +62,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
             _navItem(context, Icons.dashboard_outlined, 'Overview', () {}),
             _navItem(context, Icons.people_outline, 'Users', () => Navigator.push(context, MaterialPageRoute(builder: (_) => const UsersListScreen()))),
-            _navItem(context, Icons.verified_user_outlined, 'Verification', () => _comingSoon(context)),
+            _navItem(context, Icons.verified_user_outlined, 'Verification', () => Navigator.push(context, MaterialPageRoute(builder: (_) => const VerificationListScreen()))),
             _navItem(context, Icons.storefront_outlined, 'Listings', () => _comingSoon(context)),
             _navItem(context, Icons.receipt_long_outlined, 'Orders', () => _comingSoon(context)),
             _navItem(context, Icons.calendar_month_outlined, 'Rentals & Installments', () => _comingSoon(context)),

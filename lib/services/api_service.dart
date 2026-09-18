@@ -169,4 +169,21 @@ class ApiService {
     final res = await http.delete(Uri.parse('$baseUrl/admin/deposit-methods/$id'), headers: await _headers());
     await _handle(res);
   }
+  
+
+  // ---------- VERIFICATIONS ----------
+  static Future<List<dynamic>> getVerifications({String status = 'pending'}) async {
+    final res = await http.get(Uri.parse('$baseUrl/admin/verifications?status=$status'), headers: await _headers());
+    final data = await _handle(res);
+    return data['verifications'];
+  }
+
+  static Future<void> decideVerification(int userId, String decision, {String? reason}) async {
+    final res = await http.post(
+      Uri.parse('$baseUrl/admin/verifications/$userId/decide'),
+      headers: await _headers(),
+      body: jsonEncode({'decision': decision, 'reason': reason}),
+    );
+    await _handle(res);
+  }
 }
