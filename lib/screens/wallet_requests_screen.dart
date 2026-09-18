@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../main.dart';
 import '../services/api_service.dart';
+import 'package:flutter/services.dart';
 import 'deposit_methods_screen.dart';
 
 class WalletRequestsScreen extends StatefulWidget {
@@ -188,6 +189,32 @@ class _WalletRequestsScreenState extends State<WalletRequestsScreen> with Single
     );
   }
 
+  void _copyToClipboard(String text, String label) {
+    Clipboard.setData(ClipboardData(text: text));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$label copied'), duration: const Duration(seconds: 1)));
+  }
+
+  Widget _bankRow(String label, String value, {bool copyable = false}) {
+    if (value.isEmpty) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Row(
+        children: [
+          SizedBox(width: 80, child: Text(label, style: const TextStyle(color: AppColors.hint, fontSize: 12))),
+          Expanded(child: Text(value, style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600))),
+          if (copyable)
+            InkWell(
+              onTap: () => _copyToClipboard(value, label),
+              child: const Padding(
+                padding: EdgeInsets.all(4),
+                child: Icon(Icons.copy_outlined, size: 16, color: AppColors.primary),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
   Widget _withdrawalTile(Map w) {
     final email = _get(w, ['email']);
     final amount = _get(w, ['amount']);
@@ -206,8 +233,21 @@ class _WalletRequestsScreenState extends State<WalletRequestsScreen> with Single
             Text(email, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
             const SizedBox(height: 4),
             Text('LKR $amount', style: const TextStyle(color: Colors.greenAccent, fontSize: 13, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 6),
-            Text('$bankName · $accName · $accNum · $branch', style: const TextStyle(color: AppColors.hint, fontSize: 12)),
+            const SizedBox(height: 10),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(color: AppColors.fieldFill, borderRadius: BorderRadius.circular(10), border: Border.all(color: AppColors.border)),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _bankRow('Bank', bankName),
+                  _bankRow('Name', accName),
+                  _bankRow('Account', accNum, copyable: true),
+                  _bankRow('Branch', branch),
+                ],
+              ),
+            ),
             const SizedBox(height: 10),
             Row(
               children: [
