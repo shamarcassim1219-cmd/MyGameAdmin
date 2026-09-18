@@ -298,4 +298,21 @@ class ApiService {
     final data = await _handle(res);
     return data['message'] ?? 'Broadcast sent';
   }
+
+  // ---------- FINANCE ----------
+  static Future<double> getCommissionRate() async {
+    final res = await http.get(Uri.parse('$baseUrl/admin/settings/commission'), headers: await _headers());
+    final data = await _handle(res);
+    return (data['commissionRate'] as num).toDouble();
+  }
+
+  static Future<String> updateCommissionRate(double rate) async {
+    final res = await http.put(
+      Uri.parse('$baseUrl/admin/settings/commission'),
+      headers: await _headers(),
+      body: jsonEncode({'rate': rate}),
+    );
+    final data = await _handle(res);
+    return data['message'] ?? 'Updated';
+  }
 }
