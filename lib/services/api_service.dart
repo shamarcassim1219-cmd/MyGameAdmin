@@ -341,4 +341,17 @@ class ApiService {
     final res = await http.delete(Uri.parse('$baseUrl/promotions/$id'), headers: await _headers());
     await _handle(res);
   }
+
+  // ---------- RENTALS & INSTALLMENTS ----------
+  static Future<List<dynamic>> getRentals() async {
+    final res = await http.get(Uri.parse('$baseUrl/admin/rentals'), headers: await _headers());
+    final data = await _handle(res);
+    return data['rentals'];
+  }
+
+  static Future<List<dynamic>> getInstallmentPlans() async {
+    final res = await http.get(Uri.parse('$baseUrl/admin/installments'), headers: await _headers());
+    final data = await _handle(res);
+    return data['plans'];
+  }
 }
