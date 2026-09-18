@@ -9,39 +9,26 @@ class VerificationListScreen extends StatefulWidget {
   State<VerificationListScreen> createState() => _VerificationListScreenState();
 }
 
-class _VerificationListScreenState extends State<VerificationListScreen> with SingleTickerProviderStateMixin {
-  late final TabController _tabController;
-  final List<String> _statuses = ['pending', 'approved', 'rejected'];
-  Map<String, List<dynamic>> _cache = {};
+class _VerificationListScreenState extends State<VerificationListScreen> {
+  List<dynamic> _list = [];
   bool _loading = true;
   String? _error;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: _statuses.length, vsync: this);
-    _tabController.addListener(() {
-      if (!_tabController.indexIsChanging) _loadCurrent();
-    });
-    _loadCurrent();
+    _load();
   }
 
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _loadCurrent() async {
-    final status = _statuses[_tabController.index];
+  Future<void> _load() async {
     setState(() {
       _loading = true;
       _error = null;
     });
     try {
-      final list = await ApiService.getVerifications(status: status);
+      final list = await ApiService.getVerifications();
       setState(() {
-        _cache[status] = list;
+        _list = list;
         _loading = false;
       });
     } catch (e) {
@@ -61,47 +48,31 @@ class _VerificationListScreenState extends State<VerificationListScreen> with Si
 
   @override
   Widget build(BuildContext context) {
-    final status = _statuses[_tabController.index];
-    final list = _cache[status] ?? [];
-
     return Scaffold(
       backgroundColor: AppColors.bg,
-      appBar: AppBar(
-        title: const Text('Verification'),
-        bottom: TabBar(
-          controller: _tabController,
-          indicatorColor: AppColors.primary,
-          labelColor: Colors.white,
-          unselectedLabelColor: AppColors.hint,
-          tabs: const [
-            Tab(text: 'Pending'),
-            Tab(text: 'Approved'),
-            Tab(text: 'Rejected'),
-          ],
-        ),
-      ),
+      appBar: AppBar(title: const Text('Verification — Pending')),
       body: _loading
           ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
           : _error != null
               ? Center(child: Text(_error!, style: const TextStyle(color: Colors.redAccent)))
               : RefreshIndicator(
-                  onRefresh: _loadCurrent,
+                  onRefresh: _load,
                   color: AppColors.primary,
-                  child: list.isEmpty
+                  child: _list.isEmpty
                       ? ListView(
                           children: const [
                             SizedBox(height: 120),
-                            Center(child: Text('No verifications here', style: TextStyle(color: AppColors.hint))),
+                            Center(child: Text('No pending verifications', style: TextStyle(color: AppColors.hint))),
                           ],
                         )
                       : ListView.builder(
-                          itemCount: list.length,
+                          itemCount: _list.length,
                           itemBuilder: (context, i) {
-                            final v = list[i];
-                            final name = _get(v, ['fullName', 'full_name']);
-                            final nic = _get(v, ['nicNumber', 'nic_number']);
-                            final submitted = _get(v, ['createdAt', 'created_at']);
-                            final userId = v['userId'] ?? v['user_id'];
+                            final v = _list[i];
+                            final name = _get(v, ['full_name', 'fullName']);
+                            final nic = _get(v, ['nic_number', 'nicNumber']);
+                            final email = _get(v, ['email']);
+                            final userId = v['user_id'] ?? v['userId'];
                             final code = userId != null ? 'MG-U${userId.toString().padLeft(6, '0')}' : '';
 
                             return ListTile(
@@ -109,17 +80,14 @@ class _VerificationListScreenState extends State<VerificationListScreen> with Si
                                 backgroundColor: AppColors.primary.withOpacity(0.15),
                                 child: const Icon(Icons.badge_outlined, color: AppColors.primary, size: 18),
                               ),
-                              title: Text(name.isEmpty ? 'Unknown' : name, style: const TextStyle(color: Colors.white)),
+                              title: Text(name.isEmpty ? email : name, style: const TextStyle(color: Colors.white)),
                               subtitle: Text('$code · NIC: $nic', style: const TextStyle(color: AppColors.hint, fontSize: 12)),
-                              trailing: submitted.isEmpty
-                                  ? null
-                                  : Text(submitted.split('T').first, style: const TextStyle(color: AppColors.hint, fontSize: 11)),
                               onTap: () async {
                                 final changed = await Navigator.push<bool>(
                                   context,
                                   MaterialPageRoute(builder: (_) => VerificationDetailScreen(verification: v)),
                                 );
-                                if (changed == true) _loadCurrent();
+                                if (changed == true) _load();
                               },
                             );
                           },
@@ -148,8 +116,8 @@ class _VerificationDetailScreenState extends State<VerificationDetailScreen> {
     return '';
   }
 
-  Widget _imageBox(String label, String? url) {
-    if (url == null || url.isEmpty) return const SizedBox.shrink();
+  Widget _imageBox(String label, String url) {
+    if (url.isEmpty) return const SizedBox.shrink();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -197,43 +165,32 @@ class _VerificationDetailScreenState extends State<VerificationDetailScreen> {
     );
   }
 
-  Future<void> _decide(String decision) async {
-    String? reason;
-    if (decision == 'reject') {
-      final ctrl = TextEditingController();
-      reason = await showDialog<String>(
+  Future<void> _decide(bool approve) async {
+    if (!approve) {
+      final confirm = await showDialog<bool>(
         context: context,
         builder: (ctx) => AlertDialog(
           backgroundColor: AppColors.surface,
-          title: const Text('Reject Reason', style: TextStyle(color: Colors.white)),
-          content: TextField(
-            controller: ctrl,
-            style: const TextStyle(color: Colors.white),
-            maxLines: 3,
-            decoration: const InputDecoration(hintText: 'Why is this being rejected?'),
-          ),
+          title: const Text('Reject Verification?', style: TextStyle(color: Colors.white)),
+          content: const Text('The user will be notified and can resubmit.', style: TextStyle(color: AppColors.hint)),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-            TextButton(onPressed: () => Navigator.pop(ctx, ctrl.text.trim()), child: const Text('Confirm')),
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+            TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Reject')),
           ],
         ),
       );
-      if (reason == null || reason.isEmpty) return;
+      if (confirm != true) return;
     }
 
-    final userId = widget.verification['userId'] ?? widget.verification['user_id'];
+    final userId = widget.verification['user_id'] ?? widget.verification['userId'];
     if (userId == null) return;
 
     setState(() => _processing = true);
     try {
-      await ApiService.decideVerification(
-        userId is int ? userId : int.parse(userId.toString()),
-        decision,
-        reason: reason,
-      );
+      await ApiService.decideVerification(userId is int ? userId : int.parse(userId.toString()), approve);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(decision == 'approve' ? 'Approved' : 'Rejected')),
+        SnackBar(content: Text(approve ? 'Approved' : 'Rejected')),
       );
       Navigator.pop(context, true);
     } catch (e) {
@@ -249,9 +206,6 @@ class _VerificationDetailScreenState extends State<VerificationDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final status = _get(['status']).toLowerCase();
-    final isPending = status.isEmpty || status == 'pending';
-
     return Scaffold(
       backgroundColor: AppColors.bg,
       appBar: AppBar(title: const Text('Verification Detail')),
@@ -260,43 +214,41 @@ class _VerificationDetailScreenState extends State<VerificationDetailScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _infoRow('Full Name', _get(['fullName', 'full_name'])),
-            _infoRow('NIC Number', _get(['nicNumber', 'nic_number'])),
-            _infoRow('Document Type', _get(['documentType', 'document_type'])),
+            _infoRow('Email', _get(['email'])),
+            _infoRow('Full Name', _get(['full_name', 'fullName'])),
+            _infoRow('NIC Number', _get(['nic_number', 'nicNumber'])),
+            _infoRow('Document Type', _get(['document_type', 'documentType'])),
             _infoRow('Address', _get(['address'])),
             _infoRow('Province', _get(['province'])),
             _infoRow('District', _get(['district'])),
-            _infoRow('Status', _get(['status']).isEmpty ? 'pending' : _get(['status'])),
-            _infoRow('Submitted', _get(['createdAt', 'created_at'])),
+            _infoRow('Submitted', _get(['created_at', 'createdAt'])),
             const SizedBox(height: 8),
-            _imageBox('Front Image', _get(['frontImageUrl', 'front_image_url'])),
-            _imageBox('Back Image', _get(['backImageUrl', 'back_image_url'])),
-            _imageBox('Selfie', _get(['selfieImageUrl', 'selfie_image_url'])),
-            if (isPending) ...[
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: _processing ? null : () => _decide('reject'),
-                      icon: const Icon(Icons.close, color: Colors.redAccent),
-                      label: const Text('Reject', style: TextStyle(color: Colors.redAccent)),
-                      style: OutlinedButton.styleFrom(side: const BorderSide(color: Colors.redAccent)),
-                    ),
+            _imageBox('Front Image', _get(['front_image_url', 'frontImageUrl'])),
+            _imageBox('Back Image', _get(['back_image_url', 'backImageUrl'])),
+            _imageBox('Selfie', _get(['selfie_image_url', 'selfieImageUrl'])),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: _processing ? null : () => _decide(false),
+                    icon: const Icon(Icons.close, color: Colors.redAccent),
+                    label: const Text('Reject', style: TextStyle(color: Colors.redAccent)),
+                    style: OutlinedButton.styleFrom(side: const BorderSide(color: Colors.redAccent)),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: _processing ? null : () => _decide('approve'),
-                      icon: _processing
-                          ? const SizedBox(height: 16, width: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black))
-                          : const Icon(Icons.check),
-                      label: const Text('Approve'),
-                    ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: _processing ? null : () => _decide(true),
+                    icon: _processing
+                        ? const SizedBox(height: 16, width: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black))
+                        : const Icon(Icons.check),
+                    label: const Text('Approve'),
                   ),
-                ],
-              ),
-            ],
+                ),
+              ],
+            ),
             const SizedBox(height: 20),
           ],
         ),

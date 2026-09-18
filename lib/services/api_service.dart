@@ -172,17 +172,64 @@ class ApiService {
   
 
   // ---------- VERIFICATIONS ----------
-  static Future<List<dynamic>> getVerifications({String status = 'pending'}) async {
-    final res = await http.get(Uri.parse('$baseUrl/admin/verifications?status=$status'), headers: await _headers());
+  static Future<List<dynamic>> getVerifications() async {
+    final res = await http.get(Uri.parse('$baseUrl/admin/verifications'), headers: await _headers());
     final data = await _handle(res);
     return data['verifications'];
   }
 
-  static Future<void> decideVerification(int userId, String decision, {String? reason}) async {
+  static Future<void> decideVerification(int userId, bool approve) async {
     final res = await http.post(
       Uri.parse('$baseUrl/admin/verifications/$userId/decide'),
       headers: await _headers(),
-      body: jsonEncode({'decision': decision, 'reason': reason}),
+      body: jsonEncode({'approve': approve}),
+    );
+    await _handle(res);
+  }
+
+  // ---------- WALLET REQUESTS ----------
+  static Future<List<dynamic>> getTopups() async {
+    final res = await http.get(Uri.parse('$baseUrl/admin/topups'), headers: await _headers());
+    final data = await _handle(res);
+    return data['topups'];
+  }
+
+  static Future<void> decideTopup(int id, bool approve, {double? adjustedAmount}) async {
+    final res = await http.post(
+      Uri.parse('$baseUrl/admin/topups/$id/decide'),
+      headers: await _headers(),
+      body: jsonEncode({'approve': approve, if (adjustedAmount != null) 'adjustedAmount': adjustedAmount}),
+    );
+    await _handle(res);
+  }
+
+  static Future<List<dynamic>> getWithdrawals() async {
+    final res = await http.get(Uri.parse('$baseUrl/admin/withdrawals'), headers: await _headers());
+    final data = await _handle(res);
+    return data['withdrawals'];
+  }
+
+  static Future<void> decideWithdrawal(int id, bool approve) async {
+    final res = await http.post(
+      Uri.parse('$baseUrl/admin/withdrawals/$id/decide'),
+      headers: await _headers(),
+      body: jsonEncode({'approve': approve}),
+    );
+    await _handle(res);
+  }
+
+  // ---------- DISPUTES ----------
+  static Future<List<dynamic>> getDisputes() async {
+    final res = await http.get(Uri.parse('$baseUrl/admin/disputes'), headers: await _headers());
+    final data = await _handle(res);
+    return data['disputes'];
+  }
+
+  static Future<void> resolveDispute(int id, String resolution) async {
+    final res = await http.post(
+      Uri.parse('$baseUrl/admin/disputes/$id/resolve'),
+      headers: await _headers(),
+      body: jsonEncode({'resolution': resolution}),
     );
     await _handle(res);
   }
