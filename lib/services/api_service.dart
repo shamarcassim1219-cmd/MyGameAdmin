@@ -315,4 +315,30 @@ class ApiService {
     final data = await _handle(res);
     return data['message'] ?? 'Updated';
   }
+
+  // ---------- PROMOTIONS ----------
+  static Future<List<dynamic>> getAllPromotions() async {
+    final res = await http.get(Uri.parse('$baseUrl/promotions/admin/all'), headers: await _headers());
+    final data = await _handle(res);
+    return data['promotions'];
+  }
+
+  static Future<void> createPromotion(String title, String description, String imageUrl, String? linkUrl) async {
+    final res = await http.post(
+      Uri.parse('$baseUrl/promotions'),
+      headers: await _headers(),
+      body: jsonEncode({'title': title, 'description': description, 'imageUrl': imageUrl, 'linkUrl': linkUrl}),
+    );
+    await _handle(res);
+  }
+
+  static Future<void> togglePromotion(int id) async {
+    final res = await http.put(Uri.parse('$baseUrl/promotions/$id/toggle'), headers: await _headers());
+    await _handle(res);
+  }
+
+  static Future<void> deletePromotion(int id) async {
+    final res = await http.delete(Uri.parse('$baseUrl/promotions/$id'), headers: await _headers());
+    await _handle(res);
+  }
 }
