@@ -7,6 +7,7 @@ import 'disputes_screen.dart';
 import 'support_requests_screen.dart';
 import 'orders_screen.dart';
 import 'admin_listings_screen.dart';
+import 'broadcast_screen.dart';
 import 'verification_list_screen.dart';
 import '../services/api_service.dart';
 import 'login_screen.dart';
@@ -75,7 +76,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             _navItem(context, Icons.account_balance_wallet_outlined, 'Wallet', () => Navigator.push(context, MaterialPageRoute(builder: (_) => const WalletRequestsScreen()))),
             _navItem(context, Icons.support_agent_outlined, 'Support', () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SupportRequestsScreen()))),
             _navItem(context, Icons.bar_chart_outlined, 'Reports', () => _comingSoon(context)),
-            _navItem(context, Icons.notifications_outlined, 'Notifications', () => _comingSoon(context)),
+            _navItem(context, Icons.notifications_outlined, 'Notifications', () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BroadcastScreen()))),
             _navItem(context, Icons.campaign_outlined, 'Promotions', () => _comingSoon(context)),
             _navItem(context, Icons.attach_money_outlined, 'Finance', () => _comingSoon(context)),
             _navItem(context, Icons.settings_outlined, 'Settings', () => _comingSoon(context)),

@@ -287,4 +287,15 @@ class ApiService {
     );
     await _handle(res);
   }
+
+  // ---------- BROADCAST ----------
+  static Future<String> sendBroadcast(String title, String body) async {
+    final res = await http.post(
+      Uri.parse('$baseUrl/admin/broadcast'),
+      headers: await _headers(),
+      body: jsonEncode({'title': title, 'body': body}),
+    );
+    final data = await _handle(res);
+    return data['message'] ?? 'Broadcast sent';
+  }
 }
