@@ -259,4 +259,32 @@ class ApiService {
     final res = await http.post(Uri.parse('$baseUrl/admin/support-requests/$id/close'), headers: await _headers());
     await _handle(res);
   }
+
+  // ---------- ORDERS ----------
+  static Future<List<dynamic>> getOrders({String status = 'all'}) async {
+    final res = await http.get(Uri.parse('$baseUrl/admin/orders?status=$status'), headers: await _headers());
+    final data = await _handle(res);
+    return data['orders'];
+  }
+
+  static Future<Map<String, dynamic>> getOrderDetail(int id) async {
+    final res = await http.get(Uri.parse('$baseUrl/admin/orders/$id'), headers: await _headers());
+    return await _handle(res);
+  }
+
+  // ---------- LISTINGS ----------
+  static Future<List<dynamic>> getAdminListings({String status = 'all'}) async {
+    final res = await http.get(Uri.parse('$baseUrl/admin/listings?status=$status'), headers: await _headers());
+    final data = await _handle(res);
+    return data['listings'];
+  }
+
+  static Future<void> removeListing(int id, {String? reason}) async {
+    final res = await http.post(
+      Uri.parse('$baseUrl/admin/listings/$id/remove'),
+      headers: await _headers(),
+      body: jsonEncode({'reason': reason}),
+    );
+    await _handle(res);
+  }
 }

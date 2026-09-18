@@ -5,6 +5,8 @@ import 'deposit_methods_screen.dart';
 import 'wallet_requests_screen.dart';
 import 'disputes_screen.dart';
 import 'support_requests_screen.dart';
+import 'orders_screen.dart';
+import 'admin_listings_screen.dart';
 import 'verification_list_screen.dart';
 import '../services/api_service.dart';
 import 'login_screen.dart';
@@ -66,8 +68,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
             _navItem(context, Icons.dashboard_outlined, 'Overview', () {}),
             _navItem(context, Icons.people_outline, 'Users', () => Navigator.push(context, MaterialPageRoute(builder: (_) => const UsersListScreen()))),
             _navItem(context, Icons.verified_user_outlined, 'Verification', () => Navigator.push(context, MaterialPageRoute(builder: (_) => const VerificationListScreen()))),
-            _navItem(context, Icons.storefront_outlined, 'Listings', () => _comingSoon(context)),
-            _navItem(context, Icons.receipt_long_outlined, 'Orders', () => _comingSoon(context)),
+            _navItem(context, Icons.storefront_outlined, 'Listings', () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminListingsScreen()))),
+            _navItem(context, Icons.receipt_long_outlined, 'Orders', () => Navigator.push(context, MaterialPageRoute(builder: (_) => const OrdersScreen()))),
             _navItem(context, Icons.gavel_outlined, 'Disputes', () => Navigator.push(context, MaterialPageRoute(builder: (_) => const DisputesScreen()))),
             _navItem(context, Icons.calendar_month_outlined, 'Rentals & Installments', () => _comingSoon(context)),
             _navItem(context, Icons.account_balance_wallet_outlined, 'Wallet', () => Navigator.push(context, MaterialPageRoute(builder: (_) => const WalletRequestsScreen()))),
