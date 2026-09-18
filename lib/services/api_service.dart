@@ -239,6 +239,38 @@ class ApiService {
     await _handle(res);
   }
 
+  // ---------- MODERATOR CREATION ----------
+  static Future<void> sendModeratorOtp(String email) async {
+    final res = await http.post(
+      Uri.parse('$baseUrl/subadmin/admin-create/send-otp'),
+      headers: await _headers(),
+      body: jsonEncode({'email': email}),
+    );
+    await _handle(res);
+  }
+
+  static Future<int> createModerator({
+    required String email,
+    required String code,
+    required String password,
+    required String fullName,
+    required List<String> permissions,
+  }) async {
+    final res = await http.post(
+      Uri.parse('$baseUrl/subadmin/admin-create'),
+      headers: await _headers(),
+      body: jsonEncode({
+        'email': email,
+        'code': code,
+        'password': password,
+        'fullName': fullName,
+        'permissions': permissions,
+      }),
+    );
+    final data = await _handle(res);
+    return data['id'];
+  }
+
   // ---------- SUPPORT REQUESTS ----------
   static Future<List<dynamic>> getSupportRequests() async {
     final res = await http.get(Uri.parse('$baseUrl/admin/support-requests'), headers: await _headers());

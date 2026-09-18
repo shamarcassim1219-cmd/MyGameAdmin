@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import '../main.dart';
 import '../services/api_service.dart';
+import 'create_moderator_screen.dart';
 
 class AdminSettingsScreen extends StatefulWidget {
   const AdminSettingsScreen({super.key});
@@ -88,6 +89,18 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            SizedBox(
+              width: double.infinity,
+              height: 52,
+              child: OutlinedButton.icon(
+                onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CreateModeratorScreen())),
+                icon: const Icon(Icons.person_add_alt_1_outlined),
+                label: const Text('Create Moderator Account'),
+              ),
+            ),
+            const SizedBox(height: 32),
+            const Divider(color: AppColors.border),
+            const SizedBox(height: 16),
             const Text('Change Password', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
             const SizedBox(height: 16),
             TextField(
