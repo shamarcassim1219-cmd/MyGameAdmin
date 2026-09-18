@@ -233,4 +233,30 @@ class ApiService {
     );
     await _handle(res);
   }
+
+  // ---------- SUPPORT REQUESTS ----------
+  static Future<List<dynamic>> getSupportRequests() async {
+    final res = await http.get(Uri.parse('$baseUrl/admin/support-requests'), headers: await _headers());
+    final data = await _handle(res);
+    return data['requests'];
+  }
+
+  static Future<Map<String, dynamic>> getSupportMessages(int id) async {
+    final res = await http.get(Uri.parse('$baseUrl/admin/support-requests/$id/messages'), headers: await _headers());
+    return await _handle(res);
+  }
+
+  static Future<void> replySupportRequest(int id, String content) async {
+    final res = await http.post(
+      Uri.parse('$baseUrl/admin/support-requests/$id/reply'),
+      headers: await _headers(),
+      body: jsonEncode({'content': content}),
+    );
+    await _handle(res);
+  }
+
+  static Future<void> closeSupportRequest(int id) async {
+    final res = await http.post(Uri.parse('$baseUrl/admin/support-requests/$id/close'), headers: await _headers());
+    await _handle(res);
+  }
 }

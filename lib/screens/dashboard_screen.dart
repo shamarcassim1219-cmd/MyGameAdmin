@@ -4,6 +4,7 @@ import 'users_list_screen.dart';
 import 'deposit_methods_screen.dart';
 import 'wallet_requests_screen.dart';
 import 'disputes_screen.dart';
+import 'support_requests_screen.dart';
 import 'verification_list_screen.dart';
 import '../services/api_service.dart';
 import 'login_screen.dart';
@@ -70,7 +71,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             _navItem(context, Icons.gavel_outlined, 'Disputes', () => Navigator.push(context, MaterialPageRoute(builder: (_) => const DisputesScreen()))),
             _navItem(context, Icons.calendar_month_outlined, 'Rentals & Installments', () => _comingSoon(context)),
             _navItem(context, Icons.account_balance_wallet_outlined, 'Wallet', () => Navigator.push(context, MaterialPageRoute(builder: (_) => const WalletRequestsScreen()))),
-            _navItem(context, Icons.support_agent_outlined, 'Support', () => _comingSoon(context)),
+            _navItem(context, Icons.support_agent_outlined, 'Support', () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SupportRequestsScreen()))),
             _navItem(context, Icons.bar_chart_outlined, 'Reports', () => _comingSoon(context)),
             _navItem(context, Icons.notifications_outlined, 'Notifications', () => _comingSoon(context)),
             _navItem(context, Icons.campaign_outlined, 'Promotions', () => _comingSoon(context)),
