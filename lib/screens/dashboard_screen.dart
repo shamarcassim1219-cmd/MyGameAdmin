@@ -11,6 +11,8 @@ import 'broadcast_screen.dart';
 import 'finance_screen.dart';
 import 'promotions_screen.dart';
 import 'rentals_installments_screen.dart';
+import 'reports_screen.dart';
+import 'admin_settings_screen.dart';
 import 'verification_list_screen.dart';
 import '../services/api_service.dart';
 import 'login_screen.dart';
@@ -78,11 +80,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
             _navItem(context, Icons.calendar_month_outlined, 'Rentals & Installments', () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RentalsInstallmentsScreen()))),
             _navItem(context, Icons.account_balance_wallet_outlined, 'Wallet', () => Navigator.push(context, MaterialPageRoute(builder: (_) => const WalletRequestsScreen()))),
             _navItem(context, Icons.support_agent_outlined, 'Support', () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SupportRequestsScreen()))),
-            _navItem(context, Icons.bar_chart_outlined, 'Reports', () => _comingSoon(context)),
+            _navItem(context, Icons.bar_chart_outlined, 'Reports', () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ReportsScreen()))),
             _navItem(context, Icons.notifications_outlined, 'Notifications', () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BroadcastScreen()))),
             _navItem(context, Icons.campaign_outlined, 'Promotions', () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PromotionsScreen()))),
             _navItem(context, Icons.attach_money_outlined, 'Finance', () => Navigator.push(context, MaterialPageRoute(builder: (_) => const FinanceScreen()))),
-            _navItem(context, Icons.settings_outlined, 'Settings', () => _comingSoon(context)),
+            _navItem(context, Icons.settings_outlined, 'Settings', () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminSettingsScreen()))),
             const Divider(color: AppColors.border),
             ListTile(
               leading: const Icon(Icons.logout, color: Colors.redAccent, size: 20),

@@ -354,4 +354,21 @@ class ApiService {
     final data = await _handle(res);
     return data['plans'];
   }
+
+  // ---------- REPORTS ----------
+  static Future<Map<String, dynamic>> getReportsSummary() async {
+    final res = await http.get(Uri.parse('$baseUrl/admin/reports/summary'), headers: await _headers());
+    return await _handle(res);
+  }
+
+  // ---------- ADMIN SETTINGS ----------
+  static Future<String> changeAdminPassword(String currentPassword, String newPassword) async {
+    final res = await http.put(
+      Uri.parse('$baseUrl/admin/settings/change-password'),
+      headers: await _headers(),
+      body: jsonEncode({'currentPassword': currentPassword, 'newPassword': newPassword}),
+    );
+    final data = await _handle(res);
+    return data['message'] ?? 'Password changed';
+  }
 }
