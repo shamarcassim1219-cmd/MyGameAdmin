@@ -21,8 +21,13 @@ class ApiService {
     await prefs.remove('admin_auth_token');
   }
 
+  static const String appKey = 'mg2026-adm1n-K3y-9xQ7zR-secure';
+
   static Future<Map<String, String>> _headers({bool withAuth = true}) async {
-    final headers = {'Content-Type': 'application/json; charset=utf-8'};
+    final headers = {
+      'Content-Type': 'application/json; charset=utf-8',
+      'x-app-key': appKey,
+    };
     if (withAuth) {
       final token = await getToken();
       if (token != null) headers['Authorization'] = 'Bearer $token';
@@ -363,8 +368,8 @@ class ApiService {
 
   // ---------- ADMIN SETTINGS ----------
   static Future<String> changeAdminPassword(String currentPassword, String newPassword) async {
-    final res = await http.put(
-      Uri.parse('$baseUrl/admin/settings/change-password'),
+    final res = await http.post(
+      Uri.parse('$baseUrl/auth/admin-change-password'),
       headers: await _headers(),
       body: jsonEncode({'currentPassword': currentPassword, 'newPassword': newPassword}),
     );
