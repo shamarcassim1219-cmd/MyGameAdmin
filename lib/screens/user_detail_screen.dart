@@ -81,6 +81,62 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
     }
   }
 
+  Future<void> _giveViolation() async {
+    final reasonCtrl = TextEditingController();
+    final currentCount = (_user?['violationCount'] as num?)?.toInt() ?? 0;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        title: Text('Give Violation (currently $currentCount/3)', style: const TextStyle(color: Colors.white, fontSize: 16)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (currentCount == 2)
+              const Padding(
+                padding: EdgeInsets.only(bottom: 10),
+                child: Text('⚠️ This will be their 3rd violation — account will be auto-suspended.', style: TextStyle(color: Colors.orangeAccent, fontSize: 12, fontWeight: FontWeight.bold)),
+              ),
+            TextField(
+              controller: reasonCtrl,
+              style: const TextStyle(color: Colors.white),
+              maxLines: 2,
+              decoration: const InputDecoration(labelText: 'Reason (required)'),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.orangeAccent),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Give Violation'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    if (reasonCtrl.text.trim().isEmpty) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('A reason is required')));
+      return;
+    }
+    setState(() => _acting = true);
+    try {
+      final result = await ApiService.addViolation(widget.userId, reasonCtrl.text.trim());
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(result['suspended'] == true ? 'Violation added — account auto-suspended (3/3)' : 'Violation added (${result['violationCount']}/3)')),
+        );
+      }
+      await _load();
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))));
+    } finally {
+      if (mounted) setState(() => _acting = false);
+    }
+  }
+
   Future<void> _adjustWallet() async {
     final amountCtrl = TextEditingController();
     final reasonCtrl = TextEditingController();
@@ -143,6 +199,7 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
   Widget build(BuildContext context) {
     final u = _user;
     final banned = u?['isBanned'] == true;
+    final violationCount = (u?['violationCount'] as num?)?.toInt() ?? 0;
     final code = u != null ? 'MG-U${u['id'].toString().padLeft(6, '0')}' : '';
 
     return Scaffold(
@@ -171,6 +228,7 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
                           _row('Verified Status', u?['verifiedStatus'] ?? '—'),
                           _row('Listings', '${u?['listingsCount'] ?? 0}'),
                           _row('Orders', '${u?['ordersCount'] ?? 0}'),
+                          _row('Violations', '$violationCount / 3'),
                           if (banned) _row('Ban Reason', u?['banReason'] ?? '—'),
                         ],
                       ),
@@ -183,6 +241,17 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
                         onPressed: _acting ? null : _adjustWallet,
                         icon: const Icon(Icons.account_balance_wallet_outlined),
                         label: const Text('Adjust Wallet'),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: OutlinedButton.icon(
+                        onPressed: _acting || banned ? null : _giveViolation,
+                        icon: const Icon(Icons.warning_amber_outlined, color: Colors.orangeAccent),
+                        label: const Text('Give Violation', style: TextStyle(color: Colors.orangeAccent)),
+                        style: OutlinedButton.styleFrom(side: const BorderSide(color: Colors.orangeAccent)),
                       ),
                     ),
                     const SizedBox(height: 12),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../main.dart';
 import '../services/api_service.dart';
+import 'order_detail_screen.dart';
 
 class OrdersScreen extends StatefulWidget {
   const OrdersScreen({super.key});
@@ -102,33 +103,45 @@ class _OrdersScreenState extends State<OrdersScreen> with SingleTickerProviderSt
                             return Card(
                               color: AppColors.surface,
                               margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                              child: Padding(
-                                padding: const EdgeInsets.all(12),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Expanded(
-                                          child: Text(o['title']?.toString() ?? '', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                                        ),
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                          decoration: BoxDecoration(
-                                            color: _statusColor(status).withOpacity(0.15),
-                                            borderRadius: BorderRadius.circular(8),
-                                          ),
-                                          child: Text(status, style: TextStyle(color: _statusColor(status), fontSize: 11, fontWeight: FontWeight.bold)),
-                                        ),
-                                      ],
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(12),
+                                onTap: () {
+                                  final id = o['id'];
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => OrderDetailScreen(orderId: id is int ? id : int.parse(id.toString())),
                                     ),
-                                    const SizedBox(height: 6),
-                                    Text('Order #${o['id']} · LKR ${o['price']}', style: const TextStyle(color: AppColors.hint, fontSize: 12)),
-                                    const SizedBox(height: 4),
-                                    Text('Buyer: ${o['buyer_email']}', style: const TextStyle(color: AppColors.hint, fontSize: 12)),
-                                    Text('Seller: ${o['seller_email']}', style: const TextStyle(color: AppColors.hint, fontSize: 12)),
-                                  ],
+                                  ).then((_) => _load());
+                                },
+                                child: Padding(
+                                  padding: const EdgeInsets.all(12),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Expanded(
+                                            child: Text(o['title']?.toString() ?? '', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                                          ),
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                            decoration: BoxDecoration(
+                                              color: _statusColor(status).withOpacity(0.15),
+                                              borderRadius: BorderRadius.circular(8),
+                                            ),
+                                            child: Text(status, style: TextStyle(color: _statusColor(status), fontSize: 11, fontWeight: FontWeight.bold)),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 6),
+                                      Text('Order #${o['id']} · LKR ${o['price']}', style: const TextStyle(color: AppColors.hint, fontSize: 12)),
+                                      const SizedBox(height: 4),
+                                      Text('Buyer: ${o['buyer_email']}', style: const TextStyle(color: AppColors.hint, fontSize: 12)),
+                                      Text('Seller: ${o['seller_email']}', style: const TextStyle(color: AppColors.hint, fontSize: 12)),
+                                    ],
+                                  ),
                                 ),
                               ),
                             );

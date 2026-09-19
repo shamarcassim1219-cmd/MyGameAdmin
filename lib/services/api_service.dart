@@ -115,6 +115,15 @@ class ApiService {
     await _handle(res);
   }
 
+  static Future<Map<String, dynamic>> addViolation(int id, String reason) async {
+    final res = await http.post(
+      Uri.parse('$baseUrl/admin/users/$id/violation'),
+      headers: await _headers(),
+      body: jsonEncode({'reason': reason}),
+    );
+    return await _handle(res);
+  }
+
   // ---------- UPLOAD ----------
   static Future<String> uploadImage(XFile file) async {
     final token = await getToken();
@@ -307,6 +316,50 @@ class ApiService {
   static Future<Map<String, dynamic>> getOrderDetail(int id) async {
     final res = await http.get(Uri.parse('$baseUrl/admin/orders/$id'), headers: await _headers());
     return await _handle(res);
+  }
+
+  static Future<void> updateVault(int orderId, {required String email, required String password, String? recoveryCodes}) async {
+    final res = await http.put(
+      Uri.parse('$baseUrl/admin/orders/$orderId/vault'),
+      headers: await _headers(),
+      body: jsonEncode({'email': email, 'password': password, 'recoveryCodes': recoveryCodes}),
+    );
+    await _handle(res);
+  }
+
+  static Future<void> releaseCredentials(int orderId) async {
+    final res = await http.post(
+      Uri.parse('$baseUrl/admin/orders/$orderId/release-credentials'),
+      headers: await _headers(),
+    );
+    await _handle(res);
+  }
+
+  static Future<void> cancelOrder(int orderId, String reason) async {
+    final res = await http.post(
+      Uri.parse('$baseUrl/admin/orders/$orderId/cancel'),
+      headers: await _headers(),
+      body: jsonEncode({'reason': reason}),
+    );
+    await _handle(res);
+  }
+
+  static Future<List<dynamic>> getOrderMessages(int orderId, String type) async {
+    final res = await http.get(
+      Uri.parse('$baseUrl/admin/orders/$orderId/messages?type=$type'),
+      headers: await _headers(),
+    );
+    final data = await _handle(res);
+    return data['messages'];
+  }
+
+  static Future<void> sendOrderMessage(int orderId, String type, String content) async {
+    final res = await http.post(
+      Uri.parse('$baseUrl/admin/orders/$orderId/messages'),
+      headers: await _headers(),
+      body: jsonEncode({'type': type, 'content': content}),
+    );
+    await _handle(res);
   }
 
   // ---------- LISTINGS ----------
