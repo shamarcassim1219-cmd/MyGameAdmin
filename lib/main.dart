@@ -69,6 +69,7 @@ void handleNotificationNavigation(RemoteMessage message) {
       nav.push(MaterialPageRoute(builder: (_) => const SupportRequestsScreen()));
       break;
     case 'admin_new_subadmin_request':
+    case 'sub_admin_request':
       nav.push(MaterialPageRoute(builder: (_) => const SubAdminRequestsScreen()));
       break;
     default:
