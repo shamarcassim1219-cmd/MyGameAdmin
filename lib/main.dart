@@ -5,6 +5,13 @@ import 'firebase_options.dart';
 import 'services/api_service.dart';
 import 'screens/login_screen.dart';
 import 'screens/dashboard_screen.dart';
+import 'screens/orders_screen.dart';
+import 'screens/order_detail_screen.dart';
+import 'screens/disputes_screen.dart';
+import 'screens/verification_list_screen.dart';
+import 'screens/wallet_requests_screen.dart';
+import 'screens/support_requests_screen.dart';
+import 'screens/sub_admin_requests_screen.dart';
 
 class AppColors {
   static const bg = Color(0xFF0B0B10);
@@ -26,6 +33,48 @@ void main() async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
   runApp(const MyGameAdminApp());
+}
+
+/// Routes a tapped (or foreground-received) push notification to the
+/// relevant admin screen, based on the `type` / `relatedId` data payload
+/// sent by the backend's notifyUser() -> sendPushNotification().
+void handleNotificationNavigation(RemoteMessage message) {
+  final nav = navigatorKey.currentState;
+  if (nav == null) return;
+  final type = message.data['type']?.toString() ?? '';
+  final relatedId = message.data['relatedId']?.toString();
+  final hasRelatedId = relatedId != null && relatedId.isNotEmpty;
+
+  switch (type) {
+    case 'admin_new_order':
+    case 'admin_alert': // legacy fallback for older order/dispute pushes
+      if (hasRelatedId) {
+        nav.push(MaterialPageRoute(builder: (_) => OrderDetailScreen(orderId: int.parse(relatedId))));
+      } else {
+        nav.push(MaterialPageRoute(builder: (_) => const OrdersScreen()));
+      }
+      break;
+    case 'admin_new_dispute':
+    case 'dispute_raised':
+      nav.push(MaterialPageRoute(builder: (_) => const DisputesScreen()));
+      break;
+    case 'admin_new_verification':
+      nav.push(MaterialPageRoute(builder: (_) => const VerificationListScreen()));
+      break;
+    case 'admin_new_topup':
+    case 'admin_new_withdrawal':
+      nav.push(MaterialPageRoute(builder: (_) => const WalletRequestsScreen()));
+      break;
+    case 'admin_new_support':
+      nav.push(MaterialPageRoute(builder: (_) => const SupportRequestsScreen()));
+      break;
+    case 'admin_new_subadmin_request':
+      nav.push(MaterialPageRoute(builder: (_) => const SubAdminRequestsScreen()));
+      break;
+    default:
+      // Unknown type — stay put, nothing to route to.
+      break;
+  }
 }
 
 class MyGameAdminApp extends StatelessWidget {
@@ -109,6 +158,31 @@ class _AuthGateState extends State<_AuthGate> {
 
       messaging.onTokenRefresh.listen((newToken) async {
         await ApiService.saveFcmToken(newToken);
+      });
+
+      // Notification tapped while app was backgrounded.
+      FirebaseMessaging.onMessageOpenedApp.listen(handleNotificationNavigation);
+
+      // App was fully closed and launched by tapping a notification.
+      final initialMessage = await messaging.getInitialMessage();
+      if (initialMessage != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          handleNotificationNavigation(initialMessage);
+        });
+      }
+
+      // Show a quick banner if a push arrives while the app is open.
+      FirebaseMessaging.onMessage.listen((message) {
+        final ctx = navigatorKey.currentContext;
+        final notif = message.notification;
+        if (ctx == null || notif == null) return;
+        ScaffoldMessenger.of(ctx).showSnackBar(
+          SnackBar(
+            content: Text('${notif.title ?? ''}: ${notif.body ?? ''}'),
+            action: SnackBarAction(label: 'Open', onPressed: () => handleNotificationNavigation(message)),
+            duration: const Duration(seconds: 5),
+          ),
+        );
       });
     } catch (_) {}
   }
