@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import '../main.dart';
 import '../services/api_service.dart';
+import '../services/update_service.dart';
 import 'create_moderator_screen.dart';
 import 'sub_admin_requests_screen.dart';
 
@@ -19,6 +20,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
   bool _obscureCurrent = true;
   bool _obscureNew = true;
   bool _saving = false;
+  bool _checkingUpdate = false;
   String? _error;
   String _version = '';
 
@@ -33,6 +35,12 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
       final info = await PackageInfo.fromPlatform();
       setState(() => _version = '${info.version} (${info.buildNumber})');
     } catch (_) {}
+  }
+
+  Future<void> _checkForUpdate() async {
+    setState(() => _checkingUpdate = true);
+    await UpdateService.checkForUpdate(context, silent: false);
+    if (mounted) setState(() => _checkingUpdate = false);
   }
 
   @override
@@ -174,6 +182,18 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                 const Spacer(),
                 Text(_version, style: const TextStyle(color: AppColors.hint, fontSize: 12)),
               ],
+            ),
+            const SizedBox(height: 14),
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: OutlinedButton.icon(
+                onPressed: _checkingUpdate ? null : _checkForUpdate,
+                icon: _checkingUpdate
+                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary))
+                    : const Icon(Icons.system_update_alt_outlined),
+                label: Text(_checkingUpdate ? 'Checking...' : 'Check for Updates'),
+              ),
             ),
           ],
         ),
