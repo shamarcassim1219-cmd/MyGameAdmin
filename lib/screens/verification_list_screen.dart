@@ -223,7 +223,7 @@ class _VerificationDetailScreenState extends State<VerificationDetailScreen> {
             _infoRow('District', _get(['district'])),
             _infoRow('Submitted', _get(['created_at', 'createdAt'])),
             const SizedBox(height: 8),
-            _imageBox('Front Image', _get(['front_image_url', 'frontImageUrl'])),
+            _imageBox('Front Image', _get(['nic_image_url', 'frontImageUrl'])),
             _imageBox('Back Image', _get(['back_image_url', 'backImageUrl'])),
             _imageBox('Selfie', _get(['selfie_image_url', 'selfieImageUrl'])),
             const SizedBox(height: 12),
