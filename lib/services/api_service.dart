@@ -477,4 +477,34 @@ class ApiService {
     );
     await _handle(res);
   }
+
+  // ---------- SUB-ADMIN DEVICE APPROVAL / ACTIVE SUB-ADMINS ----------
+  static Future<List<dynamic>> getSubAdminDeviceRequests() async {
+    final res = await http.get(Uri.parse('$baseUrl/admin/sub-admins/device-requests'), headers: await _headers());
+    final data = await _handle(res);
+    return data['requests'] ?? [];
+  }
+
+  static Future<void> decideSubAdminDeviceRequest(int id, bool approve) async {
+    final res = await http.post(
+      Uri.parse('$baseUrl/admin/sub-admins/device-requests/$id/decide'),
+      headers: await _headers(),
+      body: jsonEncode({'approve': approve}),
+    );
+    await _handle(res);
+  }
+
+  static Future<List<dynamic>> getActiveSubAdmins() async {
+    final res = await http.get(Uri.parse('$baseUrl/admin/sub-admins/active'), headers: await _headers());
+    final data = await _handle(res);
+    return data['subAdmins'] ?? [];
+  }
+
+  static Future<void> forceLogoutSubAdmin(int userId) async {
+    final res = await http.post(
+      Uri.parse('$baseUrl/admin/sub-admins/$userId/force-logout'),
+      headers: await _headers(),
+    );
+    await _handle(res);
+  }
 }
