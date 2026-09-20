@@ -477,4 +477,105 @@ class ApiService {
     );
     await _handle(res);
   }
+
+  // ---------- SUB-ADMIN DEVICE APPROVAL / ACTIVE SUB-ADMINS ----------
+  static Future<List<dynamic>> getSubAdminDeviceRequests() async {
+    final res = await http.get(Uri.parse('$baseUrl/admin/sub-admins/device-requests'), headers: await _headers());
+    final data = await _handle(res);
+    return data['requests'] ?? [];
+  }
+
+  static Future<void> decideSubAdminDeviceRequest(int id, bool approve) async {
+    final res = await http.post(
+      Uri.parse('$baseUrl/admin/sub-admins/device-requests/$id/decide'),
+      headers: await _headers(),
+      body: jsonEncode({'approve': approve}),
+    );
+    await _handle(res);
+  }
+
+  static Future<List<dynamic>> getActiveSubAdmins() async {
+    final res = await http.get(Uri.parse('$baseUrl/admin/sub-admins/active'), headers: await _headers());
+    final data = await _handle(res);
+    return data['subAdmins'] ?? [];
+  }
+
+  static Future<void> forceLogoutSubAdmin(int userId) async {
+    final res = await http.post(
+      Uri.parse('$baseUrl/admin/sub-admins/$userId/force-logout'),
+      headers: await _headers(),
+    );
+    await _handle(res);
+  }
+
+  // ---------- ADMIN 2FA (Google Authenticator) ----------
+  static Future<Map<String, dynamic>> adminLoginFull(String email, String password) async {
+    final res = await http.post(
+      Uri.parse('$baseUrl/auth/admin-login'),
+      headers: await _headers(withAuth: false),
+      body: jsonEncode({'email': email, 'password': password}),
+    );
+    return await _handle(res);
+  }
+
+  static Future<void> adminVerifyTotp(String email, String code) async {
+    final res = await http.post(
+      Uri.parse('$baseUrl/auth/admin-verify-totp'),
+      headers: await _headers(withAuth: false),
+      body: jsonEncode({'email': email, 'code': code}),
+    );
+    final data = await _handle(res);
+    await saveToken(data['token']);
+  }
+
+  static Future<Map<String, dynamic>> adminTotpGenerate(String email, String password) async {
+    final res = await http.post(
+      Uri.parse('$baseUrl/auth/admin-totp-generate'),
+      headers: await _headers(withAuth: false),
+      body: jsonEncode({'email': email, 'password': password}),
+    );
+    return await _handle(res);
+  }
+
+  static Future<String> adminTotpConfirm(String email, String password, String secret, String code) async {
+    final res = await http.post(
+      Uri.parse('$baseUrl/auth/admin-totp-confirm'),
+      headers: await _headers(withAuth: false),
+      body: jsonEncode({'email': email, 'password': password, 'secret': secret, 'code': code}),
+    );
+    final data = await _handle(res);
+    return data['message'] ?? 'Enabled';
+  }
+
+  // ---------- TOP-UP (TEMP STUBS, replace later) ----------
+  static Never _topupSoon() => throw Exception('Top-up admin coming soon');
+  static Future<List<dynamic>> getTopupGames() async => _topupSoon();
+  static Future<void> addTopupGame({required dynamic name, dynamic iconUrl, dynamic requiresZoneId}) async => _topupSoon();
+  static Future<void> updateTopupGame(dynamic id, {required dynamic name, dynamic iconUrl, dynamic requiresZoneId}) async => _topupSoon();
+  static Future<void> toggleTopupGame(dynamic id) async => _topupSoon();
+  static Future<void> deleteTopupGame(dynamic id) async => _topupSoon();
+  static Future<List<dynamic>> getTopupOrders({dynamic status}) async => _topupSoon();
+  static Future<void> completeTopupOrder(dynamic id) async => _topupSoon();
+  static Future<void> failTopupOrder(dynamic id, dynamic reason) async => _topupSoon();
+  static Future<List<dynamic>> getTopupPackages(dynamic gameId) async => _topupSoon();
+  static Future<void> addTopupPackage({required dynamic gameId, required dynamic name, required dynamic category, required dynamic price}) async => _topupSoon();
+  static Future<void> updateTopupPackage(dynamic id, {required dynamic name, required dynamic category, required dynamic price}) async => _topupSoon();
+  static Future<void> toggleTopupPackage(dynamic id) async => _topupSoon();
+  static Future<void> deleteTopupPackage(dynamic id) async => _topupSoon();
+
+  // ---------- TOP-UP (TEMP STUBS, replace later) ----------
+  static Never _topupSoon() => throw Exception('Top-up admin coming soon');
+  static Future<List<dynamic>> getTopupGames() async => _topupSoon();
+  static Future<void> addTopupGame({required dynamic name, dynamic iconUrl, dynamic requiresZoneId}) async => _topupSoon();
+  static Future<void> updateTopupGame(dynamic id, {required dynamic name, dynamic iconUrl, dynamic requiresZoneId}) async => _topupSoon();
+  static Future<void> toggleTopupGame(dynamic id) async => _topupSoon();
+  static Future<void> deleteTopupGame(dynamic id) async => _topupSoon();
+  static Future<List<dynamic>> getTopupOrders({dynamic status}) async => _topupSoon();
+  static Future<void> completeTopupOrder(dynamic id) async => _topupSoon();
+  static Future<void> failTopupOrder(dynamic id, dynamic reason) async => _topupSoon();
+  static Future<List<dynamic>> getTopupPackages(dynamic gameId) async => _topupSoon();
+  static Future<void> addTopupPackage({required dynamic gameId, required dynamic name, required dynamic category, required dynamic price}) async => _topupSoon();
+  static Future<void> updateTopupPackage(dynamic id, {required dynamic name, required dynamic category, required dynamic price}) async => _topupSoon();
+  static Future<void> toggleTopupPackage(dynamic id) async => _topupSoon();
+  static Future<void> deleteTopupPackage(dynamic id) async => _topupSoon();
 }
