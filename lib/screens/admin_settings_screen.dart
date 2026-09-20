@@ -5,6 +5,7 @@ import '../services/api_service.dart';
 import '../services/update_service.dart';
 import 'create_moderator_screen.dart';
 import 'sub_admin_requests_screen.dart';
+import 'totp_setup_screen.dart';
 
 class AdminSettingsScreen extends StatefulWidget {
   const AdminSettingsScreen({super.key});
@@ -115,6 +116,16 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                 onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SubAdminRequestsScreen())),
                 icon: const Icon(Icons.pending_actions_outlined),
                 label: const Text('Sub-Admin Requests'),
+              ),
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              height: 52,
+              child: OutlinedButton.icon(
+                onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TotpSetupScreen())),
+                icon: const Icon(Icons.security),
+                label: const Text('Google Authenticator (2FA)'),
               ),
             ),
             const SizedBox(height: 32),
