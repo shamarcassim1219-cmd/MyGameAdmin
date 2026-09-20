@@ -462,6 +462,40 @@ class ApiService {
     return data['message'] ?? 'Password changed';
   }
 
+  // ---------- MORE TOOLS (admin) ----------
+  static Future<Map<String, dynamic>> getMoreToolsAdmin() async {
+    final res = await http.get(Uri.parse('$baseUrl/tools/admin/all'), headers: await _headers());
+    final data = await _handle(res);
+    return Map<String, dynamic>.from(data);
+  }
+
+  static Future<void> saveMoreToolSettings({int? dailyLimit, String? apiKey}) async {
+    final body = <String, dynamic>{};
+    if (dailyLimit != null) body['dailyLimit'] = dailyLimit;
+    if (apiKey != null && apiKey.isNotEmpty) body['apiKey'] = apiKey;
+    final res = await http.put(Uri.parse('$baseUrl/tools/admin/settings'), headers: await _headers(), body: jsonEncode(body));
+    await _handle(res);
+  }
+
+  static Future<void> addMoreTool({required String title, String? subtitle, String? icon, String? linkUrl}) async {
+    final res = await http.post(
+      Uri.parse('$baseUrl/tools/admin'),
+      headers: await _headers(),
+      body: jsonEncode({'title': title, 'subtitle': subtitle ?? '', 'icon': icon ?? 'apps', 'linkUrl': linkUrl}),
+    );
+    await _handle(res);
+  }
+
+  static Future<void> toggleMoreTool(dynamic id) async {
+    final res = await http.put(Uri.parse('$baseUrl/tools/admin/$id/toggle'), headers: await _headers());
+    await _handle(res);
+  }
+
+  static Future<void> deleteMoreTool(dynamic id) async {
+    final res = await http.delete(Uri.parse('$baseUrl/tools/admin/$id'), headers: await _headers());
+    await _handle(res);
+  }
+
   // ---------- SUB-ADMIN APPROVAL ----------
   static Future<List<dynamic>> getSubAdminRequests() async {
     final res = await http.get(Uri.parse('$baseUrl/admin/sub-admins/requests'), headers: await _headers());
@@ -546,22 +580,6 @@ class ApiService {
     final data = await _handle(res);
     return data['message'] ?? 'Enabled';
   }
-
-  // ---------- TOP-UP (TEMP STUBS, replace later) ----------
-  static Never _topupSoon() => throw Exception('Top-up admin coming soon');
-  static Future<List<dynamic>> getTopupGames() async => _topupSoon();
-  static Future<void> addTopupGame({required dynamic name, dynamic iconUrl, dynamic requiresZoneId}) async => _topupSoon();
-  static Future<void> updateTopupGame(dynamic id, {required dynamic name, dynamic iconUrl, dynamic requiresZoneId}) async => _topupSoon();
-  static Future<void> toggleTopupGame(dynamic id) async => _topupSoon();
-  static Future<void> deleteTopupGame(dynamic id) async => _topupSoon();
-  static Future<List<dynamic>> getTopupOrders({dynamic status}) async => _topupSoon();
-  static Future<void> completeTopupOrder(dynamic id) async => _topupSoon();
-  static Future<void> failTopupOrder(dynamic id, dynamic reason) async => _topupSoon();
-  static Future<List<dynamic>> getTopupPackages(dynamic gameId) async => _topupSoon();
-  static Future<void> addTopupPackage({required dynamic gameId, required dynamic name, required dynamic category, required dynamic price}) async => _topupSoon();
-  static Future<void> updateTopupPackage(dynamic id, {required dynamic name, required dynamic category, required dynamic price}) async => _topupSoon();
-  static Future<void> toggleTopupPackage(dynamic id) async => _topupSoon();
-  static Future<void> deleteTopupPackage(dynamic id) async => _topupSoon();
 
   // ---------- TOP-UP (TEMP STUBS, replace later) ----------
   static Never _topupSoon() => throw Exception('Top-up admin coming soon');
