@@ -14,6 +14,7 @@ import 'rentals_installments_screen.dart';
 import 'reports_screen.dart';
 import 'admin_settings_screen.dart';
 import 'verification_list_screen.dart';
+import 'topup_games_screen.dart';
 import '../services/api_service.dart';
 import 'login_screen.dart';
 
@@ -78,6 +79,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             _navItem(context, Icons.receipt_long_outlined, 'Orders', () => Navigator.push(context, MaterialPageRoute(builder: (_) => const OrdersScreen()))),
             _navItem(context, Icons.gavel_outlined, 'Disputes', () => Navigator.push(context, MaterialPageRoute(builder: (_) => const DisputesScreen()))),
             _navItem(context, Icons.calendar_month_outlined, 'Rentals & Installments', () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RentalsInstallmentsScreen()))),
+            _navItem(context, Icons.sports_esports_outlined, 'Top-Up Store', () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TopupGamesScreen()))),
             _navItem(context, Icons.account_balance_wallet_outlined, 'Wallet', () => Navigator.push(context, MaterialPageRoute(builder: (_) => const WalletRequestsScreen()))),
             _navItem(context, Icons.support_agent_outlined, 'Support', () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SupportRequestsScreen()))),
             _navItem(context, Icons.bar_chart_outlined, 'Reports', () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ReportsScreen()))),
