@@ -496,6 +496,113 @@ class ApiService {
     await _handle(res);
   }
 
+  // ---------- TOURNAMENTS (admin) ----------
+  static Future<Map<String, dynamic>> getTournamentsAdmin() async {
+    final res = await http.get(Uri.parse('$baseUrl/tournaments/admin/all'), headers: await _headers());
+    final data = await _handle(res);
+    return Map<String, dynamic>.from(data);
+  }
+
+  static Future<Map<String, dynamic>> getTournamentAdmin(int id) async {
+    final res = await http.get(Uri.parse('$baseUrl/tournaments/admin/$id'), headers: await _headers());
+    final data = await _handle(res);
+    return Map<String, dynamic>.from(data);
+  }
+
+  static Future<int> createTournament(Map<String, dynamic> body) async {
+    final res = await http.post(Uri.parse('$baseUrl/tournaments/admin'), headers: await _headers(), body: jsonEncode(body));
+    final data = await _handle(res);
+    return int.tryParse('${data['id']}') ?? 0;
+  }
+
+  static Future<void> updateTournament(int id, Map<String, dynamic> body) async {
+    final res = await http.put(Uri.parse('$baseUrl/tournaments/admin/$id'), headers: await _headers(), body: jsonEncode(body));
+    await _handle(res);
+  }
+
+  static Future<void> deleteTournament(int id) async {
+    final res = await http.delete(Uri.parse('$baseUrl/tournaments/admin/$id'), headers: await _headers());
+    await _handle(res);
+  }
+
+  static Future<Map<String, dynamic>> cancelTournament(int id) async {
+    final res = await http.post(Uri.parse('$baseUrl/tournaments/admin/$id/cancel'), headers: await _headers());
+    final data = await _handle(res);
+    return Map<String, dynamic>.from(data);
+  }
+
+  static Future<void> saveTournamentRoom(int id, String roomId, String roomPassword) async {
+    final res = await http.post(
+      Uri.parse('$baseUrl/tournaments/admin/$id/room'),
+      headers: await _headers(),
+      body: jsonEncode({'roomId': roomId, 'roomPassword': roomPassword}),
+    );
+    await _handle(res);
+  }
+
+  static Future<String> sendTournamentRoom(int id) async {
+    final res = await http.post(Uri.parse('$baseUrl/tournaments/admin/$id/send-room'), headers: await _headers());
+    final data = await _handle(res);
+    return '${data['message'] ?? 'Sent'}';
+  }
+
+  static Future<String> remindTournament(int id, {String? message}) async {
+    final res = await http.post(
+      Uri.parse('$baseUrl/tournaments/admin/$id/remind'),
+      headers: await _headers(),
+      body: jsonEncode({'message': message ?? ''}),
+    );
+    final data = await _handle(res);
+    return '${data['message'] ?? 'Sent'}';
+  }
+
+  static Future<void> saveTournamentPoints(int id, int matchNo, List<Map<String, dynamic>> entries) async {
+    final res = await http.put(
+      Uri.parse('$baseUrl/tournaments/admin/$id/points'),
+      headers: await _headers(),
+      body: jsonEncode({'matchNo': matchNo, 'entries': entries}),
+    );
+    await _handle(res);
+  }
+
+  static Future<void> deleteTournamentMatch(int id, int matchNo) async {
+    final res = await http.delete(Uri.parse('$baseUrl/tournaments/admin/$id/matches/$matchNo'), headers: await _headers());
+    await _handle(res);
+  }
+
+  static Future<void> suspendTournamentTeam(int id, int teamId, String reason) async {
+    final res = await http.post(
+      Uri.parse('$baseUrl/tournaments/admin/$id/teams/$teamId/suspend'),
+      headers: await _headers(),
+      body: jsonEncode({'reason': reason}),
+    );
+    await _handle(res);
+  }
+
+  static Future<void> unsuspendTournamentTeam(int id, int teamId) async {
+    final res = await http.post(Uri.parse('$baseUrl/tournaments/admin/$id/teams/$teamId/unsuspend'), headers: await _headers());
+    await _handle(res);
+  }
+
+  static Future<String> setTournamentWinner(int id, int teamId, String? imageUrl) async {
+    final res = await http.post(
+      Uri.parse('$baseUrl/tournaments/admin/$id/winner'),
+      headers: await _headers(),
+      body: jsonEncode({'teamId': teamId, 'imageUrl': imageUrl ?? ''}),
+    );
+    final data = await _handle(res);
+    return '${data['message'] ?? 'Winner set'}';
+  }
+
+  static Future<void> setTournamentWinnerImage(int id, String? imageUrl) async {
+    final res = await http.put(
+      Uri.parse('$baseUrl/tournaments/admin/$id/winner-image'),
+      headers: await _headers(),
+      body: jsonEncode({'imageUrl': imageUrl ?? ''}),
+    );
+    await _handle(res);
+  }
+
   // ---------- SUB-ADMIN APPROVAL ----------
   static Future<List<dynamic>> getSubAdminRequests() async {
     final res = await http.get(Uri.parse('$baseUrl/admin/sub-admins/requests'), headers: await _headers());
