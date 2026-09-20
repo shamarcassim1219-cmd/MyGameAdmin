@@ -507,4 +507,43 @@ class ApiService {
     );
     await _handle(res);
   }
+
+  // ---------- ADMIN 2FA (Google Authenticator) ----------
+  static Future<Map<String, dynamic>> adminLoginFull(String email, String password) async {
+    final res = await http.post(
+      Uri.parse('$baseUrl/auth/admin-login'),
+      headers: await _headers(withAuth: false),
+      body: jsonEncode({'email': email, 'password': password}),
+    );
+    return await _handle(res);
+  }
+
+  static Future<void> adminVerifyTotp(String email, String code) async {
+    final res = await http.post(
+      Uri.parse('$baseUrl/auth/admin-verify-totp'),
+      headers: await _headers(withAuth: false),
+      body: jsonEncode({'email': email, 'code': code}),
+    );
+    final data = await _handle(res);
+    await saveToken(data['token']);
+  }
+
+  static Future<Map<String, dynamic>> adminTotpGenerate(String email, String password) async {
+    final res = await http.post(
+      Uri.parse('$baseUrl/auth/admin-totp-generate'),
+      headers: await _headers(withAuth: false),
+      body: jsonEncode({'email': email, 'password': password}),
+    );
+    return await _handle(res);
+  }
+
+  static Future<String> adminTotpConfirm(String email, String password, String secret, String code) async {
+    final res = await http.post(
+      Uri.parse('$baseUrl/auth/admin-totp-confirm'),
+      headers: await _headers(withAuth: false),
+      body: jsonEncode({'email': email, 'password': password, 'secret': secret, 'code': code}),
+    );
+    final data = await _handle(res);
+    return data['message'] ?? 'Enabled';
+  }
 }

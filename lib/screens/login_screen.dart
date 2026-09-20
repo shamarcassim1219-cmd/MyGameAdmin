@@ -4,6 +4,8 @@ import '../main.dart';
 import '../services/api_service.dart';
 import 'dashboard_screen.dart';
 
+enum _LoginStep { credentials, emailCode, authenticator }
+
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -16,8 +18,16 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordCtrl = TextEditingController();
   final _otpCtrl = TextEditingController();
   bool _loading = false;
-  bool _otpSent = false;
+  _LoginStep _step = _LoginStep.credentials;
   String? _error;
+
+  @override
+  void dispose() {
+    _emailCtrl.dispose();
+    _passwordCtrl.dispose();
+    _otpCtrl.dispose();
+    super.dispose();
+  }
 
   Future<void> _sendLogin() async {
     if (_emailCtrl.text.trim().isEmpty || _passwordCtrl.text.isEmpty) {
@@ -29,9 +39,13 @@ class _LoginScreenState extends State<LoginScreen> {
       _error = null;
     });
     try {
-      await ApiService.adminLogin(_emailCtrl.text.trim(), _passwordCtrl.text);
+      final data = await ApiService.adminLoginFull(_emailCtrl.text.trim(), _passwordCtrl.text);
+      // Server says requiresTotp when Google Authenticator is enabled for this admin,
+      // otherwise it emails a 6-digit code.
+      final totp = data['requiresTotp'] == true;
       setState(() {
-        _otpSent = true;
+        _step = totp ? _LoginStep.authenticator : _LoginStep.emailCode;
+        _otpCtrl.clear();
         _loading = false;
       });
     } catch (e) {
@@ -42,14 +56,18 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  Future<void> _verifyOtp() async {
+  Future<void> _verifyCode() async {
     if (_otpCtrl.text.trim().isEmpty) return;
     setState(() {
       _loading = true;
       _error = null;
     });
     try {
-      await ApiService.adminVerifyLogin(_emailCtrl.text.trim(), _otpCtrl.text.trim());
+      if (_step == _LoginStep.authenticator) {
+        await ApiService.adminVerifyTotp(_emailCtrl.text.trim(), _otpCtrl.text.trim());
+      } else {
+        await ApiService.adminVerifyLogin(_emailCtrl.text.trim(), _otpCtrl.text.trim());
+      }
       try { final t = await FirebaseMessaging.instance.getToken(); if (t != null) await ApiService.saveFcmToken(t); } catch (_) {}
       if (!mounted) return;
       Navigator.of(context).pushAndRemoveUntil(
@@ -64,8 +82,13 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  Widget _spinnerOr(String label) => _loading
+      ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+      : Text(label);
+
   @override
   Widget build(BuildContext context) {
+    final isTotp = _step == _LoginStep.authenticator;
     return Scaffold(
       backgroundColor: AppColors.bg,
       body: Center(
@@ -78,7 +101,7 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 16),
               const Text('MYGame Admin', style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
               const SizedBox(height: 32),
-              if (!_otpSent) ...[
+              if (_step == _LoginStep.credentials) ...[
                 TextField(
                   controller: _emailCtrl,
                   style: const TextStyle(color: Colors.white),
@@ -102,21 +125,30 @@ class _LoginScreenState extends State<LoginScreen> {
                   height: 50,
                   child: ElevatedButton(
                     onPressed: _loading ? null : _sendLogin,
-                    child: _loading
-                        ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                        : const Text('Send Login Code'),
+                    child: _spinnerOr('Continue'),
                   ),
                 ),
               ] else ...[
-                Text('Code sent to ${_emailCtrl.text.trim()}', style: const TextStyle(color: AppColors.hint, fontSize: 13)),
+                Icon(isTotp ? Icons.phonelink_lock : Icons.mark_email_read_outlined,
+                    size: 36, color: AppColors.primary),
+                const SizedBox(height: 10),
+                Text(
+                  isTotp
+                      ? 'Open Google Authenticator and enter the 6-digit code for MYGame Admin'
+                      : 'Code sent to ${_emailCtrl.text.trim()}',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: AppColors.hint, fontSize: 13),
+                ),
                 const SizedBox(height: 14),
                 TextField(
                   controller: _otpCtrl,
+                  autofocus: true,
                   style: const TextStyle(color: Colors.white, letterSpacing: 6, fontSize: 20),
                   textAlign: TextAlign.center,
                   keyboardType: TextInputType.number,
                   maxLength: 6,
-                  decoration: const InputDecoration(labelText: 'Verification Code'),
+                  onSubmitted: (_) => _loading ? null : _verifyCode(),
+                  decoration: InputDecoration(labelText: isTotp ? 'Authenticator Code' : 'Verification Code'),
                 ),
                 const SizedBox(height: 12),
                 if (_error != null) ...[
@@ -127,14 +159,15 @@ class _LoginScreenState extends State<LoginScreen> {
                   width: double.infinity,
                   height: 50,
                   child: ElevatedButton(
-                    onPressed: _loading ? null : _verifyOtp,
-                    child: _loading
-                        ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                        : const Text('Verify & Login'),
+                    onPressed: _loading ? null : _verifyCode,
+                    child: _spinnerOr('Verify & Login'),
                   ),
                 ),
                 TextButton(
-                  onPressed: () => setState(() => _otpSent = false),
+                  onPressed: () => setState(() {
+                    _step = _LoginStep.credentials;
+                    _error = null;
+                  }),
                   child: const Text('Back', style: TextStyle(color: AppColors.hint)),
                 ),
               ],
