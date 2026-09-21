@@ -5,6 +5,7 @@ import '../services/api_service.dart';
 import '../services/update_service.dart';
 import 'create_moderator_screen.dart';
 import 'sub_admin_requests_screen.dart';
+import 'ff_api_settings_screen.dart';
 import 'more_tools_admin_screen.dart';
 import 'tournaments_admin_screen.dart';
 import 'totp_setup_screen.dart';
@@ -148,6 +149,16 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                 onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TotpSetupScreen())),
                 icon: const Icon(Icons.security),
                 label: const Text('Google Authenticator (2FA)'),
+              ),
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              height: 52,
+              child: OutlinedButton.icon(
+                onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const FfApiSettingsScreen())),
+                icon: const Icon(Icons.sports_esports_outlined),
+                label: const Text('Free Fire Info API'),
               ),
             ),
             const SizedBox(height: 32),

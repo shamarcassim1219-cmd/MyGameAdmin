@@ -525,6 +525,12 @@ class ApiService {
     await _handle(res);
   }
 
+  static Future<String> announceTournament(int id) async {
+    final res = await http.post(Uri.parse('$baseUrl/tournaments/admin/$id/announce'), headers: await _headers());
+    final data = await _handle(res);
+    return '${data['message'] ?? 'Sent'}';
+  }
+
   static Future<Map<String, dynamic>> cancelTournament(int id) async {
     final res = await http.post(Uri.parse('$baseUrl/tournaments/admin/$id/cancel'), headers: await _headers());
     final data = await _handle(res);
@@ -703,4 +709,28 @@ class ApiService {
   static Future<void> updateTopupPackage(dynamic id, {required dynamic name, required dynamic category, required dynamic price}) async => _topupSoon();
   static Future<void> toggleTopupPackage(dynamic id) async => _topupSoon();
   static Future<void> deleteTopupPackage(dynamic id) async => _topupSoon();
+
+  // ---------- FREE FIRE INFO API SETTINGS ----------
+  static Future<Map<String, dynamic>> getFfConfig() async {
+    final res = await http.get(Uri.parse('$baseUrl/admin/ff-config'), headers: await _headers());
+    return await _handle(res);
+  }
+
+  static Future<void> saveFfConfig(String url, String key) async {
+    final res = await http.post(
+      Uri.parse('$baseUrl/admin/ff-config'),
+      headers: await _headers(),
+      body: jsonEncode({'url': url, 'key': key}),
+    );
+    await _handle(res);
+  }
+
+  static Future<Map<String, dynamic>> testFfConfig(String url, String key) async {
+    final res = await http.post(
+      Uri.parse('$baseUrl/admin/ff-config/test'),
+      headers: await _headers(),
+      body: jsonEncode({'url': url, 'key': key}),
+    );
+    return await _handle(res);
+  }
 }
