@@ -8,6 +8,7 @@ import 'sub_admin_requests_screen.dart';
 import 'ff_api_settings_screen.dart';
 import 'more_tools_admin_screen.dart';
 import 'tournaments_admin_screen.dart';
+import 'binance_admin_screen.dart';
 import 'totp_setup_screen.dart';
 
 class AdminSettingsScreen extends StatefulWidget {
@@ -139,6 +140,16 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                 onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TournamentsAdminScreen())),
                 icon: const Icon(Icons.emoji_events_outlined),
                 label: const Text('Tournaments'),
+              ),
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              height: 52,
+              child: OutlinedButton.icon(
+                onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BinanceAdminScreen())),
+                icon: const Icon(Icons.currency_bitcoin),
+                label: const Text('Binance deposits'),
               ),
             ),
             const SizedBox(height: 12),

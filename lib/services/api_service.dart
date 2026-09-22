@@ -609,6 +609,34 @@ class ApiService {
     await _handle(res);
   }
 
+  // ---------- BINANCE DEPOSITS (admin) ----------
+  static Future<Map<String, dynamic>> getBinanceSettings() async {
+    final res = await http.get(Uri.parse('$baseUrl/binance/admin/settings'), headers: await _headers());
+    final data = await _handle(res);
+    return Map<String, dynamic>.from(data);
+  }
+
+  static Future<void> saveBinanceSettings(Map<String, dynamic> body) async {
+    final res = await http.put(Uri.parse('$baseUrl/binance/admin/settings'), headers: await _headers(), body: jsonEncode(body));
+    await _handle(res);
+  }
+
+  static Future<Map<String, dynamic>> testBinanceOrder(String orderId) async {
+    final res = await http.post(
+      Uri.parse('$baseUrl/binance/admin/test'),
+      headers: await _headers(),
+      body: jsonEncode({'orderId': orderId}),
+    );
+    final data = await _handle(res);
+    return Map<String, dynamic>.from(data);
+  }
+
+  static Future<List<dynamic>> getBinanceDeposits() async {
+    final res = await http.get(Uri.parse('$baseUrl/binance/admin/deposits'), headers: await _headers());
+    final data = await _handle(res);
+    return (data['deposits'] as List?) ?? [];
+  }
+
   // ---------- SUB-ADMIN APPROVAL ----------
   static Future<List<dynamic>> getSubAdminRequests() async {
     final res = await http.get(Uri.parse('$baseUrl/admin/sub-admins/requests'), headers: await _headers());
