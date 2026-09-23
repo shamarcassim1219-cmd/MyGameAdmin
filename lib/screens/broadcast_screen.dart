@@ -1,4 +1,6 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import '../main.dart';
 import '../services/api_service.dart';
 
@@ -15,12 +17,18 @@ class _BroadcastScreenState extends State<BroadcastScreen> {
   bool _sending = false;
   String? _resultMessage;
   String? _error;
+  XFile? _image;
 
   @override
   void dispose() {
     _titleCtrl.dispose();
     _bodyCtrl.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickImage() async {
+    final picked = await ImagePicker().pickImage(source: ImageSource.gallery, imageQuality: 85);
+    if (picked != null) setState(() => _image = picked);
   }
 
   Future<void> _send() async {
@@ -51,10 +59,13 @@ class _BroadcastScreenState extends State<BroadcastScreen> {
       _resultMessage = null;
     });
     try {
-      final msg = await ApiService.sendBroadcast(title, body);
+      String? imageUrl;
+      if (_image != null) imageUrl = await ApiService.uploadImage(_image!);
+      final msg = await ApiService.sendBroadcast(title, body, imageUrl: imageUrl);
       setState(() {
         _resultMessage = msg;
         _sending = false;
+        _image = null;
       });
       _titleCtrl.clear();
       _bodyCtrl.clear();
@@ -90,6 +101,28 @@ class _BroadcastScreenState extends State<BroadcastScreen> {
               maxLines: 5,
               decoration: const InputDecoration(labelText: 'Message', hintText: 'Write your announcement here...'),
             ),
+            const SizedBox(height: 16),
+            if (_image != null)
+              Stack(
+                alignment: Alignment.topRight,
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: Image.file(File(_image!.path), width: double.infinity, height: 180, fit: BoxFit.cover),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close, color: Colors.white),
+                    style: IconButton.styleFrom(backgroundColor: Colors.black54),
+                    onPressed: _sending ? null : () => setState(() => _image = null),
+                  ),
+                ],
+              )
+            else
+              OutlinedButton.icon(
+                onPressed: _sending ? null : _pickImage,
+                icon: const Icon(Icons.image_outlined),
+                label: const Text('Add image (optional)'),
+              ),
             if (_error != null) ...[
               const SizedBox(height: 12),
               Text(_error!, style: const TextStyle(color: Colors.redAccent, fontSize: 13)),

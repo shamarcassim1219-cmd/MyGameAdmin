@@ -379,11 +379,11 @@ class ApiService {
   }
 
   // ---------- BROADCAST ----------
-  static Future<String> sendBroadcast(String title, String body) async {
+  static Future<String> sendBroadcast(String title, String body, {String? imageUrl}) async {
     final res = await http.post(
       Uri.parse('$baseUrl/admin/broadcast'),
       headers: await _headers(),
-      body: jsonEncode({'title': title, 'body': body}),
+      body: jsonEncode({'title': title, 'body': body, if (imageUrl != null) 'imageUrl': imageUrl}),
     );
     final data = await _handle(res);
     return data['message'] ?? 'Broadcast sent';
