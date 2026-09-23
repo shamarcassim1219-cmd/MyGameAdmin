@@ -537,6 +537,12 @@ class ApiService {
     return Map<String, dynamic>.from(data);
   }
 
+  static Future<Map<String, dynamic>> toggleTournamentVisibility(int id) async {
+    final res = await http.post(Uri.parse('$baseUrl/tournaments/admin/$id/toggle-visibility'), headers: await _headers());
+    final data = await _handle(res);
+    return Map<String, dynamic>.from(data);
+  }
+
   static Future<void> saveTournamentRoom(int id, String roomId, String roomPassword) async {
     final res = await http.post(
       Uri.parse('$baseUrl/tournaments/admin/$id/room'),

@@ -737,6 +737,17 @@ class _TournamentDetailAdminScreenState extends State<TournamentDetailAdminScree
     });
   }
 
+  Future<void> _toggleVisibility() async {
+    final currentlyHidden = _t['hiddenFromCustomers'] == true;
+    final title = currentlyHidden ? 'Show this tournament in the customer app again?' : 'Remove this tournament from the customer app?';
+    final body = currentlyHidden ? 'Customers will be able to see it again.' : 'Customers will no longer see this post. Nothing else changes - no refunds, no cancellation.';
+    if (!await _confirm(title, body)) return;
+    await _act(() async {
+      final r = await ApiService.toggleTournamentVisibility(widget.id);
+      return '${r['message'] ?? 'Updated'}';
+    });
+  }
+
   Future<void> _deleteTournament() async {
     if (!await _confirm('Delete tournament?', 'This removes the tournament permanently.')) return;
     try {
@@ -792,6 +803,12 @@ class _TournamentDetailAdminScreenState extends State<TournamentDetailAdminScree
           onPressed: active ? _cancelTournament : null,
           icon: const Icon(Icons.cancel_outlined, color: Colors.red),
           label: const Text('Cancel tournament (refund leaders)', style: TextStyle(color: Colors.red)),
+        ),
+        const SizedBox(height: 8),
+        OutlinedButton.icon(
+          onPressed: _toggleVisibility,
+          icon: Icon(_t['hiddenFromCustomers'] == true ? Icons.visibility_outlined : Icons.visibility_off_outlined),
+          label: Text(_t['hiddenFromCustomers'] == true ? 'Show in customer app' : 'Remove from customer app'),
         ),
         if (_teams.isEmpty) ...[
           const SizedBox(height: 8),
