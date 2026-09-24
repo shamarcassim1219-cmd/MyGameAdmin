@@ -225,6 +225,9 @@ class _WalletRequestsScreenState extends State<WalletRequestsScreen> with Single
     final amount = _get(t, ['amount']);
     final ref = _get(t, ['reference_number']);
     final slip = _get(t, ['slip_url']);
+    final oid = _get(t, ['id']);
+    final status = _get(t, ['status']);
+    final pending = status.isEmpty || status == 'pending';
     return Card(
       color: AppColors.surface,
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -235,7 +238,7 @@ class _WalletRequestsScreenState extends State<WalletRequestsScreen> with Single
           children: [
             Text(email, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
             const SizedBox(height: 4),
-            Text('LKR $amount · Ref: $ref', style: const TextStyle(color: AppColors.hint, fontSize: 12)),
+            Text('#$oid · LKR $amount · Ref: $ref · $status', style: const TextStyle(color: AppColors.hint, fontSize: 12)),
             if (slip.isNotEmpty) ...[
               const SizedBox(height: 8),
               GestureDetector(
@@ -250,8 +253,8 @@ class _WalletRequestsScreenState extends State<WalletRequestsScreen> with Single
                 ),
               ),
             ],
-            const SizedBox(height: 10),
-            Row(
+            if (pending) const SizedBox(height: 10),
+            if (pending) Row(
               children: [
                 Expanded(
                   child: OutlinedButton(
@@ -305,6 +308,9 @@ class _WalletRequestsScreenState extends State<WalletRequestsScreen> with Single
     final accName = _get(w, ['bank_account_name']);
     final accNum = _get(w, ['bank_account_number']);
     final branch = _get(w, ['bank_branch']);
+    final oid = _get(w, ['id']);
+    final status = _get(w, ['status']);
+    final pending = status.isEmpty || status == 'pending';
     return Card(
       color: AppColors.surface,
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -315,7 +321,7 @@ class _WalletRequestsScreenState extends State<WalletRequestsScreen> with Single
           children: [
             Text(email, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
             const SizedBox(height: 4),
-            Text('LKR $amount', style: const TextStyle(color: Colors.greenAccent, fontSize: 13, fontWeight: FontWeight.bold)),
+            Text('#$oid · LKR $amount · $status', style: const TextStyle(color: Colors.greenAccent, fontSize: 13, fontWeight: FontWeight.bold)),
             const SizedBox(height: 10),
             Container(
               width: double.infinity,
@@ -331,8 +337,8 @@ class _WalletRequestsScreenState extends State<WalletRequestsScreen> with Single
                 ],
               ),
             ),
-            const SizedBox(height: 10),
-            Row(
+            if (pending) const SizedBox(height: 10),
+            if (pending) Row(
               children: [
                 Expanded(
                   child: OutlinedButton(
