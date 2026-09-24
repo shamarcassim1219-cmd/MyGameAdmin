@@ -27,7 +27,7 @@ class _BroadcastScreenState extends State<BroadcastScreen> {
   }
 
   Future<void> _pickImage() async {
-    final picked = await ImagePicker().pickImage(source: ImageSource.gallery, imageQuality: 85);
+    final picked = await ImagePicker().pickImage(source: ImageSource.gallery, imageQuality: 60, maxWidth: 1024);
     if (picked != null) setState(() => _image = picked);
   }
 
