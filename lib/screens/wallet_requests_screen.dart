@@ -17,6 +17,8 @@ class _WalletRequestsScreenState extends State<WalletRequestsScreen> with Single
   List<dynamic> _withdrawals = [];
   bool _loading = true;
   String? _error;
+  final _searchCtrl = TextEditingController();
+  bool _searching = false;
 
   @override
   void initState() {
@@ -28,6 +30,7 @@ class _WalletRequestsScreenState extends State<WalletRequestsScreen> with Single
   @override
   void dispose() {
     _tabController.dispose();
+    _searchCtrl.dispose();
     super.dispose();
   }
 
@@ -52,6 +55,45 @@ class _WalletRequestsScreenState extends State<WalletRequestsScreen> with Single
     }
   }
 
+  Future<void> _search() async {
+    final q = _searchCtrl.text.trim();
+    if (q.isEmpty) {
+      _clearSearch();
+      return;
+    }
+    setState(() {
+      _loading = true;
+      _error = null;
+      _searching = true;
+    });
+    try {
+      if (_tabController.index == 0) {
+        final r = await ApiService.searchTopups(q);
+        setState(() {
+          _topups = r;
+          _loading = false;
+        });
+      } else {
+        final r = await ApiService.searchWithdrawals(q);
+        setState(() {
+          _withdrawals = r;
+          _loading = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _error = e.toString().replaceFirst('Exception: ', '');
+        _loading = false;
+      });
+    }
+  }
+
+  void _clearSearch() {
+    _searchCtrl.clear();
+    setState(() => _searching = false);
+    _load();
+  }
+
   String _get(Map v, List<String> keys) {
     for (final k in keys) {
       if (v[k] != null && v[k].toString().isNotEmpty) return v[k].toString();
@@ -61,13 +103,26 @@ class _WalletRequestsScreenState extends State<WalletRequestsScreen> with Single
 
   Future<void> _decideTopup(Map t) async {
     final id = t['id'];
-    final amount = _get(t, ['amount']);
+    final amountCtrl = TextEditingController(text: _get(t, ['amount']));
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.surface,
         title: const Text('Approve Top-up?', style: TextStyle(color: Colors.white)),
-        content: Text('LKR $amount will be added to the user\'s wallet.', style: const TextStyle(color: AppColors.hint)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Amount credited to the user\'s wallet (edit if needed):', style: TextStyle(color: AppColors.hint, fontSize: 12)),
+            const SizedBox(height: 8),
+            TextField(
+              controller: amountCtrl,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              style: const TextStyle(color: Colors.white),
+              decoration: const InputDecoration(labelText: 'Amount (LKR)'),
+            ),
+          ],
+        ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
           TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Approve')),
@@ -75,8 +130,9 @@ class _WalletRequestsScreenState extends State<WalletRequestsScreen> with Single
       ),
     );
     if (confirm != true) return;
+    final adjusted = double.tryParse(amountCtrl.text.trim());
     try {
-      await ApiService.decideTopup(id is int ? id : int.parse(id.toString()), true);
+      await ApiService.decideTopup(id is int ? id : int.parse(id.toString()), true, adjustedAmount: adjusted);
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Top-up approved')));
       _load();
     } catch (e) {
@@ -86,11 +142,18 @@ class _WalletRequestsScreenState extends State<WalletRequestsScreen> with Single
 
   Future<void> _rejectTopup(Map t) async {
     final id = t['id'];
+    final reasonCtrl = TextEditingController();
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.surface,
         title: const Text('Reject Top-up?', style: TextStyle(color: Colors.white)),
+        content: TextField(
+          controller: reasonCtrl,
+          maxLines: 3,
+          style: const TextStyle(color: Colors.white),
+          decoration: const InputDecoration(labelText: 'Reason (shown to the user)'),
+        ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
           TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Reject')),
@@ -99,7 +162,7 @@ class _WalletRequestsScreenState extends State<WalletRequestsScreen> with Single
     );
     if (confirm != true) return;
     try {
-      await ApiService.decideTopup(id is int ? id : int.parse(id.toString()), false);
+      await ApiService.decideTopup(id is int ? id : int.parse(id.toString()), false, reason: reasonCtrl.text.trim());
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Top-up rejected')));
       _load();
     } catch (e) {
@@ -110,16 +173,32 @@ class _WalletRequestsScreenState extends State<WalletRequestsScreen> with Single
   Future<void> _decideWithdrawal(Map w, bool approve) async {
     final id = w['id'];
     final amount = _get(w, ['amount']);
+    final reasonCtrl = TextEditingController();
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.surface,
         title: Text(approve ? 'Approve Withdrawal?' : 'Reject Withdrawal?', style: const TextStyle(color: Colors.white)),
-        content: Text(
-          approve
-              ? 'Confirm LKR $amount has been sent to the user\'s bank account.'
-              : 'The amount will be refunded to the user\'s wallet.',
-          style: const TextStyle(color: AppColors.hint),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              approve
+                  ? 'Confirm LKR $amount has been sent to the user\'s bank account.'
+                  : 'The amount will be refunded to the user\'s wallet.',
+              style: const TextStyle(color: AppColors.hint),
+            ),
+            if (!approve) ...[
+              const SizedBox(height: 10),
+              TextField(
+                controller: reasonCtrl,
+                maxLines: 3,
+                style: const TextStyle(color: Colors.white),
+                decoration: const InputDecoration(labelText: 'Reason (shown to the user)'),
+              ),
+            ],
+          ],
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
@@ -129,7 +208,11 @@ class _WalletRequestsScreenState extends State<WalletRequestsScreen> with Single
     );
     if (confirm != true) return;
     try {
-      await ApiService.decideWithdrawal(id is int ? id : int.parse(id.toString()), approve);
+      await ApiService.decideWithdrawal(
+        id is int ? id : int.parse(id.toString()),
+        approve,
+        reason: approve ? null : reasonCtrl.text.trim(),
+      );
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(approve ? 'Withdrawal confirmed' : 'Withdrawal rejected & refunded')));
       _load();
     } catch (e) {
@@ -294,25 +377,54 @@ class _WalletRequestsScreenState extends State<WalletRequestsScreen> with Single
           ],
         ),
       ),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
-          : _error != null
-              ? Center(child: Text(_error!, style: const TextStyle(color: Colors.redAccent)))
-              : RefreshIndicator(
-                  onRefresh: _load,
-                  color: AppColors.primary,
-                  child: TabBarView(
-                    controller: _tabController,
-                    children: [
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 10, 12, 4),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _searchCtrl,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: InputDecoration(
+                      labelText: 'Search by order ID',
+                      isDense: true,
+                      suffixIcon: _searching
+                          ? IconButton(icon: const Icon(Icons.close, size: 18), onPressed: _clearSearch)
+                          : null,
+                    ),
+                    onSubmitted: (_) => _search(),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                ElevatedButton(onPressed: _search, child: const Text('Search')),
+              ],
+            ),
+          ),
+          Expanded(
+            child: _loading
+                ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+                : _error != null
+                    ? Center(child: Text(_error!, style: const TextStyle(color: Colors.redAccent)))
+                    : RefreshIndicator(
+                        onRefresh: _load,
+                        color: AppColors.primary,
+                        child: TabBarView(
+                          controller: _tabController,
+                          children: [
                       _topups.isEmpty
                           ? ListView(children: const [SizedBox(height: 120), Center(child: Text('No pending top-ups', style: TextStyle(color: AppColors.hint)))])
                           : ListView.builder(itemCount: _topups.length, itemBuilder: (c, i) => _topupTile(_topups[i])),
                       _withdrawals.isEmpty
                           ? ListView(children: const [SizedBox(height: 120), Center(child: Text('No pending withdrawals', style: TextStyle(color: AppColors.hint)))])
                           : ListView.builder(itemCount: _withdrawals.length, itemBuilder: (c, i) => _withdrawalTile(_withdrawals[i])),
-                    ],
-                  ),
-                ),
+                          ],
+                        ),
+                      ),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -208,11 +208,21 @@ class ApiService {
     return data['topups'];
   }
 
-  static Future<void> decideTopup(int id, bool approve, {double? adjustedAmount}) async {
+  static Future<List<dynamic>> searchTopups(String orderId) async {
+    final res = await http.get(Uri.parse('$baseUrl/admin/topups/search?id=$orderId'), headers: await _headers());
+    final data = await _handle(res);
+    return data['topups'];
+  }
+
+  static Future<void> decideTopup(int id, bool approve, {double? adjustedAmount, String? reason}) async {
     final res = await http.post(
       Uri.parse('$baseUrl/admin/topups/$id/decide'),
       headers: await _headers(),
-      body: jsonEncode({'approve': approve, if (adjustedAmount != null) 'adjustedAmount': adjustedAmount}),
+      body: jsonEncode({
+        'approve': approve,
+        if (adjustedAmount != null) 'adjustedAmount': adjustedAmount,
+        if (reason != null && reason.isNotEmpty) 'reason': reason,
+      }),
     );
     await _handle(res);
   }
@@ -223,11 +233,20 @@ class ApiService {
     return data['withdrawals'];
   }
 
-  static Future<void> decideWithdrawal(int id, bool approve) async {
+  static Future<List<dynamic>> searchWithdrawals(String orderId) async {
+    final res = await http.get(Uri.parse('$baseUrl/admin/withdrawals/search?id=$orderId'), headers: await _headers());
+    final data = await _handle(res);
+    return data['withdrawals'];
+  }
+
+  static Future<void> decideWithdrawal(int id, bool approve, {String? reason}) async {
     final res = await http.post(
       Uri.parse('$baseUrl/admin/withdrawals/$id/decide'),
       headers: await _headers(),
-      body: jsonEncode({'approve': approve}),
+      body: jsonEncode({
+        'approve': approve,
+        if (reason != null && reason.isNotEmpty) 'reason': reason,
+      }),
     );
     await _handle(res);
   }
