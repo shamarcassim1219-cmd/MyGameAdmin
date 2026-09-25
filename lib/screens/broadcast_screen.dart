@@ -1,6 +1,8 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'dart:typed_data';
+import '../widgets/simple_cropper.dart';
 import '../main.dart';
 import '../services/api_service.dart';
 
@@ -28,7 +30,30 @@ class _BroadcastScreenState extends State<BroadcastScreen> {
 
   Future<void> _pickImage() async {
     final picked = await ImagePicker().pickImage(source: ImageSource.gallery, imageQuality: 60, maxWidth: 1024);
-    if (picked != null) setState(() => _image = picked);
+    if (picked == null) return;
+    final cropped = await _cropImage(picked);
+    if (mounted) setState(() => _image = cropped);
+  }
+
+  Future<void> _recropImage() async {
+    if (_image == null) return;
+    final cropped = await _cropImage(_image!);
+    if (mounted) setState(() => _image = cropped);
+  }
+
+  Future<XFile> _cropImage(XFile img) async {
+    try {
+      final bytes = await img.readAsBytes();
+      if (!mounted) return img;
+      final result = await Navigator.push<Uint8List>(
+        context,
+        MaterialPageRoute(builder: (_) => SimpleImageCropper(bytes: bytes, aspectRatio: 16 / 9), fullscreenDialog: true),
+      );
+      if (result == null) return img;
+      return await saveCroppedImage(result, img.name);
+    } catch (_) {
+      return img;
+    }
   }
 
   Future<void> _send() async {
@@ -106,9 +131,20 @@ class _BroadcastScreenState extends State<BroadcastScreen> {
               Stack(
                 alignment: Alignment.topRight,
                 children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(10),
-                    child: Image.file(File(_image!.path), width: double.infinity, height: 180, fit: BoxFit.cover),
+                  GestureDetector(
+                    onTap: _sending ? null : _recropImage,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: Image.file(File(_image!.path), width: double.infinity, height: 180, fit: BoxFit.cover),
+                    ),
+                  ),
+                  Positioned(
+                    left: 8, bottom: 8,
+                    child: IconButton(
+                      icon: const Icon(Icons.crop, color: Colors.white, size: 20),
+                      style: IconButton.styleFrom(backgroundColor: Colors.black54),
+                      onPressed: _sending ? null : _recropImage,
+                    ),
                   ),
                   IconButton(
                     icon: const Icon(Icons.close, color: Colors.white),
