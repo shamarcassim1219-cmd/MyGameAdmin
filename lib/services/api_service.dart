@@ -92,6 +92,19 @@ class ApiService {
     return await _handle(res);
   }
 
+  static Future<void> updateUser(int id, {String? displayName, String? email, String? phone}) async {
+    final body = <String, dynamic>{};
+    if (displayName != null) body['displayName'] = displayName;
+    if (email != null) body['email'] = email;
+    if (phone != null) body['phone'] = phone;
+    final res = await http.put(
+      Uri.parse('$baseUrl/admin/users/$id'),
+      headers: await _headers(),
+      body: jsonEncode(body),
+    );
+    await _handle(res);
+  }
+
   static Future<void> banUser(int id, String reason) async {
     final res = await http.post(
       Uri.parse('$baseUrl/admin/users/$id/ban'),

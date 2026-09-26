@@ -182,6 +182,68 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
     }
   }
 
+  Future<void> _editDetails() async {
+    final nameCtrl = TextEditingController(text: _user?['displayName'] ?? '');
+    final emailCtrl = TextEditingController(text: _user?['email'] ?? '');
+    final phoneCtrl = TextEditingController(text: _user?['phone'] ?? '');
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        title: const Text('Edit User Details', style: TextStyle(color: Colors.white)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameCtrl,
+              style: const TextStyle(color: Colors.white),
+              decoration: const InputDecoration(labelText: 'Name'),
+            ),
+            const SizedBox(height: 10),
+            TextField(
+              controller: emailCtrl,
+              style: const TextStyle(color: Colors.white),
+              keyboardType: TextInputType.emailAddress,
+              decoration: const InputDecoration(labelText: 'Email'),
+            ),
+            const SizedBox(height: 10),
+            TextField(
+              controller: phoneCtrl,
+              style: const TextStyle(color: Colors.white),
+              keyboardType: TextInputType.phone,
+              decoration: const InputDecoration(labelText: 'Phone'),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          ElevatedButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Save')),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    final name = nameCtrl.text.trim();
+    final email = emailCtrl.text.trim();
+    final phone = phoneCtrl.text.trim();
+    if (name.isEmpty || email.isEmpty) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Name and email are required')));
+      return;
+    }
+
+    setState(() => _acting = true);
+    try {
+      await ApiService.updateUser(widget.userId, displayName: name, email: email, phone: phone);
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('User details updated')));
+      await _load();
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))));
+    } finally {
+      if (mounted) setState(() => _acting = false);
+    }
+  }
+
   Widget _row(String label, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
@@ -204,7 +266,17 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.bg,
-      appBar: AppBar(title: const Text('User Details')),
+      appBar: AppBar(
+        title: const Text('User Details'),
+        actions: [
+          if (u != null)
+            IconButton(
+              icon: const Icon(Icons.edit_outlined),
+              tooltip: 'Edit user details',
+              onPressed: _acting ? null : _editDetails,
+            ),
+        ],
+      ),
       body: _loading
           ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
           : _error != null
